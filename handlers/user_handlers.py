@@ -1,10 +1,20 @@
 from copy import deepcopy
-
-from aiogram import Router
+import asyncio
+from aiogram import Router, Dispatcher
 from aiogram.filters import Command, CommandStart, Text
-from aiogram.types import CallbackQuery, Message
-from database.database import user_dict_template, users_db, get_trades_list, get_trades_tasks_list, get_author, get_base
+from aiogram.types import CallbackQuery, Message, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, \
+    ReplyKeyboardMarkup, ContentType
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
+
+from database.database import user_dict_template, users_db, get_trades_list, get_trades_tasks_list, get_author, \
+    get_base, get_task_detail, post_add_comment, post_dont_task, put_register
 from filters.filters import IsDelBookmarkCallbackData, IsDigitCallbackData
+from aiogram.filters.state import State, StatesGroup
+from aiogram.fsm.state import default_state
+from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
+from bot import main
+
 from keyboards.bookmarks_kb import (create_bookmarks_keyboard,
                                     create_edit_keyboard)
 from keyboards.trades_keyboards import create_trades_inline_kb
@@ -13,6 +23,12 @@ from lexicon.lexicon import LEXICON
 from services.file_handling import book
 
 router: Router = Router()
+
+
+class Form(StatesGroup):
+    comment = State()
+    task = State()
+    comment_id = State()
 
 
 # Этот хэндлер будет срабатывать на команду "/start" -
@@ -32,147 +48,137 @@ async def process_help_command(message: Message):
     await message.answer(LEXICON[message.text])
 
 
-# Этот хэндлер будет срабатывать на команду "/beginning"
-# и отправлять пользователю первую страницу книги с кнопками пагинации
-@router.message(Command(commands='beginning'))
-async def process_beginning_command(message: Message):
-    users_db[message.from_user.id]['page'] = 1
-    text = book[users_db[message.from_user.id]['page']]
-    await message.answer(
-            text=text,
-            reply_markup=create_pagination_keyboard(
-                    'backward',
-                    f'{users_db[message.from_user.id]["page"]}/{len(book)}',
-                    'forward'))
-
-
 @router.message(Command(commands='register'))
-async def process_beginning_command(message: Message):
-    print(message.from_user.id)
-    trades_data = [i['name'] for i in get_trades_list()]
+async def process_register_command(message: Message, ):
+    # Инициализируем билдер
+    kb_builder: ReplyKeyboardBuilder = ReplyKeyboardBuilder()
+
+    # Создаем кнопки
+    contact_btn: KeyboardButton = KeyboardButton(
+        text='Предать телефон',
+        request_contact=True)
+
+    # Добавляем кнопки в билдер
+    kb_builder.add(contact_btn)
+
+    # Создаем объект клавиатуры
+    keyboard: ReplyKeyboardMarkup = kb_builder.as_markup(
+        resize_keyboard=True,
+        one_time_keyboard=True)
+
     await message.answer(
-            text="Выберите нужного сотрудника",
-            reply_markup=create_trades_inline_kb(1, trades_data))
+        text='Для регистрации необходимо нажать кнопку "Передать телефон"',
+        reply_markup=keyboard)
+    await message.delete()
 
 
 @router.message(Command(commands='tasks'))
 async def process_beginning_command(message: Message):
-    print(message.from_user.id)
+
     tasks_list = get_trades_tasks_list(message.from_user.id)
-    for task in tasks_list:
+    if len(tasks_list) > 0:
 
-        date = task['date'].replace("T", " ").replace("Z", "")
-        author = get_author(task['author'])
-        base = get_base(task['base'])
+        for task in tasks_list:
 
-        text = f"""
-        Задача номер {task['number']} от {date}\n\n"{task['name']}"\n\nАвтор: { author['name'] }\nОснование: 
-        {base['name']}
-        """
-        await message.answer(
-                text=text,
-                reply_markup=create_trades_inline_kb(1, [x['number'] for x in tasks_list]))
+            date = task['date'].replace("T", " ").replace("Z", "")
+            author = get_author(task['author'])
+            base = get_base(task['base'])
+
+            done_button: InlineKeyboardButton = InlineKeyboardButton(
+                text="Выполнена ✅",
+                callback_data=f"done_{task['number']}")
+            not_done_button: InlineKeyboardButton = InlineKeyboardButton(
+                text="Не выполнена ❌",
+                callback_data=f"dont_{task['number']}")
+            forward_button: InlineKeyboardButton = InlineKeyboardButton(
+                text="Переадресовать ↪",
+                callback_data=f"forward_{task['number']}")
+            keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
+                inline_keyboard=[[done_button], [not_done_button], [forward_button]])
+
+            text = f"""
+            Задача номер {task['number']} от {date}\n\n"{task['name']}"\n\nАвтор: { author['name'] }\nОснование: {base['name']}
+            """
+            await message.answer(
+                    text=text,
+                    reply_markup=keyboard)
+    else:
+        await message.answer(text="У вас нет новых задач")
 
 
-@router.callback_query(Text(text='forward'))
+@router.callback_query(Text(startswith='forward'))
 async def process_forward_press(callback: CallbackQuery):
+
+    task_number = callback.data.split("_")[1]
+    task = get_task_detail(task_number)
+    date = task['date'].replace("T", " ").replace("Z", "")
     trades_data = [i['name'] for i in get_trades_list()]
+
+    text = f"""
+        Переадресовать задачу №{task['number']} от {date}\n\n"{task['name']}"\n\n на
+    """
+
     await callback.message.edit_text(
-        text="Переадресовать задачу на",
+        text=text,
         reply_markup=create_trades_inline_kb(1, trades_data))
     await callback.answer()
 
 
-
-# Этот хэндлер будет срабатывать на команду "/continue"
-# и отправлять пользователю страницу книги, на которой пользователь
-# остановился в процессе взаимодействия с ботом
-# @router.message(Command(commands='continue'))
-# async def process_continue_command(message: Message):
-#     text = book[users_db[message.from_user.id]['page']]
-#     await message.answer(
-#                 text=text,
-#                 reply_markup=create_pagination_keyboard(
-#                     'backward',
-#                     f'{users_db[message.from_user.id]["page"]}/{len(book)}',
-#                     'forward'))
+@router.message(StateFilter(Form.comment))
+async def add_comment(message: Message, state: FSMContext):
+    comment_id = post_add_comment(chat_id=message.chat.id, comment=message.text)
+    await state.update_data(comment=message.text)
+    await state.update_data(comment_id=comment_id)
+    data = await state.get_data()
+    if post_dont_task(number=data['task'], comment_id=data['comment_id']):
+        await state.clear()
+        await message.answer(f"Задача №{data['task']} сохранена")
+    else:
+        await message.answer(f"Произошла ошибка, позвоните в техподдержку")
 
 
-# Этот хэндлер будет срабатывать на команду "/bookmarks"
-# и отправлять пользователю список сохраненных закладок,
-# если они есть или сообщение о том, что закладок нет
-# @router.message(Command(commands='bookmarks'))
-# async def process_bookmarks_command(message: Message):
-#     if users_db[message.from_user.id]["bookmarks"]:
-#         await message.answer(
-#             text=LEXICON[message.text],
-#             reply_markup=create_bookmarks_keyboard(
-#                 *users_db[message.from_user.id]["bookmarks"]))
-#     else:
-#         await message.answer(text=LEXICON['no_bookmarks'])
+@router.callback_query(Text(startswith='dont'), StateFilter(default_state))
+async def process_done_press(callback: CallbackQuery, state: FSMContext):
+    task_number = callback.data.split("_")[1]
+    await state.update_data(task=task_number)
+    task = get_task_detail(task_number)
+    date = task['date'].replace("T", " ").replace("Z", "")
+
+    text = f"""
+        Укажите комментарий к задаче №{task['number']} от {date}\n\n"{task['name']}"\n
+    """
+    await callback.message.answer(text=text)
+    await state.set_state(Form.comment)
+    await asyncio.sleep(3)
+    await callback.message.delete()
 
 
-# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "вперед"
-# во время взаимодействия пользователя с сообщением-книгой
-# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки "назад"
-# во время взаимодействия пользователя с сообщением-книгой
-# @router.callback_query(Text(text='backward'))
-# async def process_backward_press(callback: CallbackQuery):
-#     if users_db[callback.from_user.id]['page'] > 1:
-#         users_db[callback.from_user.id]['page'] -= 1
-#         text = book[users_db[callback.from_user.id]['page']]
-#         await callback.message.edit_text(
-#                 text=text,
-#                 reply_markup=create_pagination_keyboard(
-#                     'backward',
-#                     f'{users_db[callback.from_user.id]["page"]}/{len(book)}',
-#                     'forward'))
-#     await callback.answer()
+@router.callback_query(Text(startswith='done'))
+async def process_done_press(callback: CallbackQuery):
+
+    task_number = callback.data.split("_")[1]
+    task = get_task_detail(task_number)
+    date = task['date'].replace("T", " ").replace("Z", "")
+    trades_data = [i['name'] for i in get_trades_list()]
+
+    text = f"""
+        Переадресовать задачу №{task['number']} от {date}\n\n"{task['name']}"\n\n на
+    """
+
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=create_trades_inline_kb(1, trades_data))
+    await callback.answer("Ok")
 
 
-# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки
-# с номером текущей страницы и добавлять текущую страницу в закладки
-# @router.callback_query(lambda x: '/' in x.data and x.data.replace('/', '').isdigit())
-# async def process_page_press(callback: CallbackQuery):
-#     users_db[callback.from_user.id]['bookmarks'].add(
-#         users_db[callback.from_user.id]['page'])
-#     await callback.answer('Страница добавлена в закладки!')
+@router.message()
+async def get_contact(message: ContentType.CONTACT):
 
-
-# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки
-# с закладкой из списка закладок
-# @router.callback_query(IsDigitCallbackData())
-# async def process_bookmark_press(callback: CallbackQuery):
-#     text = book[int(callback.data)]
-#     users_db[callback.from_user.id]['page'] = int(callback.data)
-#     await callback.message.edit_text(
-#                 text=text,
-#                 reply_markup=create_pagination_keyboard(
-#                     'backward',
-#                     f'{users_db[callback.from_user.id]["page"]}/{len(book)}',
-#                     'forward'))
-#     await callback.answer()
-# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки
-# "отменить" во время работы со списком закладок (просмотр и редактирование)
-# @router.callback_query(Text(text='cancel'))
-# async def process_cancel_press(callback: CallbackQuery):
-#     await callback.message.edit_text(text=LEXICON['cancel_text'])
-#     await callback.answer()
-
-
-# Этот хэндлер будет срабатывать на нажатие инлайн-кнопки
-# с закладкой из списка закладок к удалению
-# @router.callback_query(IsDelBookmarkCallbackData())
-# async def process_del_bookmark_press(callback: CallbackQuery):
-#     users_db[callback.from_user.id]['bookmarks'].remove(
-#                                                     int(callback.data[:-3]))
-#     if users_db[callback.from_user.id]['bookmarks']:
-#         await callback.message.edit_text(
-#                     text=LEXICON['/bookmarks'],
-#                     reply_markup=create_edit_keyboard(
-#                             *users_db[callback.from_user.id]["bookmarks"]))
-#     else:
-#         await callback.message.edit_text(text=LEXICON['no_bookmarks'])
-#     await callback.answer()
-
-
+    phone = message.contact.phone_number
+    chat_id = message.contact.user_id
+    message.delete()
+    response = put_register(phone=phone, chat_id=chat_id)
+    if response['status']:
+        return await message.answer(text=response['message'])
+    else:
+        return await message.answer(text=response['message'])

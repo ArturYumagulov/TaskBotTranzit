@@ -1,4 +1,4 @@
-BOOK_PATH = 'book\\Bredberi_Marsianskie-hroniki.txt'
+BOOK_PATH = 'book/Bredberi_Marsianskie-hroniki.txt'
 PAGE_SIZE = 1050
 
 book: dict[int, str] = {}

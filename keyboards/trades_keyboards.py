@@ -50,7 +50,6 @@ def create_trades_tasks_inline_kb(width: int, *args) -> InlineKeyboardMarkup:
     if args:
         for i in args:
             print(i)
-            break
             # buttons.append(InlineKeyboardButton(
             #     text=lst[button],
             #     callback_data=lst[button]))
