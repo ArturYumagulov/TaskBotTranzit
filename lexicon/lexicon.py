@@ -16,3 +16,5 @@ LEXICON_COMMANDS: dict[str, str] = {
     '/help': 'Справка по работе бота',
     '/tasks': 'Список новых задач'
 }
+LEXICON_ALL_TASKS: dict[str, str] = {
+}
