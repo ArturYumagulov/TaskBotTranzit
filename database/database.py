@@ -1,13 +1,5 @@
-import datetime
 import json
-import asyncio
 import requests
-
-user_dict_template: dict = {'page': 1,
-                            'bookmarks': set()}
-
-# Инициализируем "базу данных"
-users_db: dict = {}
 
 BASE_URL = "http://192.168.80.224:8000/api/v1/"
 
@@ -105,29 +97,29 @@ def put_register(phone: str, chat_id: str):
     worker = requests.get(url=f"{BASE_URL}worker_f/?phone={clean_phone}").json()
 
     if len(worker) <= 0:
-        return {'status': False, 'message': "Данный контакт не существует в системе"}
+        return {'status': False, 'message': "Данный контакт не существует в системе, обратитесь к своему руководителю"}
     else:
-        data = {
-            "code":  worker[0]['code'],
-            "name": worker[0]['name'],
-            "chat_id": chat_id,
-        }
-        update = requests.put(url=f"{BASE_URL}workers/", data=data)
+        worker[0]['chat_id'] = chat_id
+
+        data = json.dumps(worker)
+
+        update = requests.put(url=f"{BASE_URL}workers/", data=data, headers={'Content-Type': 'application/json'})
+
         if update.status_code == 201:
             return {'status': True, 'message': "Регистрация прошла успешно"}
         else:
-            return {'status': False, 'message': "Произошла ошибка, позвоните в техподдержку"}
+            return {'status': False, 'message': "Техническая ошибка. Обратитесь в тех.поддержку"}
 
 
 def get_forward_supervisor_controller(number: str) -> dict:
+
     result = []
     trades_list = requests.get(url=f"{BASE_URL}workers/{number}/")
-    contorller = requests.get(url=f"{BASE_URL}worker_f/?controller=true")
+    controller = requests.get(url=f"{BASE_URL}worker_f/?controller=true")
     supervisor_id = trades_list.json()['supervisor']
     supervisor = requests.get(url=f"{BASE_URL}supervisors/{supervisor_id}/")
-    # result.append(trades_list.json())
     result.append(supervisor.json())
-    result.append(contorller.json()[0])
+    result.append(controller.json()[0])
 
     if trades_list.status_code == 200:
         return {'status': True, 'result': result}
@@ -204,7 +196,7 @@ def get_ready_result_task(result, chat_id):
                 return {"status": False, 'text': f"Статус {add_ready_task.status_code}"}
 
     else:
-        print("Worker не создан")
+        return {"status": False, 'text': "Worker не создан"}
 
 
 if __name__ == '__main__':

@@ -1,12 +1,6 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
-from database.database import get_trades_list, get_trades_tasks_list, get_partner_worker_list, \
-    get_result_list, get_forward_supervisor_controller
-
-from lexicon import lexicon
-
-# [InlineKeyboardButton(text='but_1', url=None, callback_data='but_1', web_app=None, login_url=None,
-# switch_inline_query=None, switch_inline_query_current_chat=None, callback_game=None, pay=None)]
+from database.database import get_forward_supervisor_controller
 
 
 def create_trades_register_inline_kb():
@@ -51,7 +45,6 @@ def create_trades_forward_inline_kb(width: int, lst: list) -> InlineKeyboardMark
 
     if lst:
         for button in range(len(lst)):
-            # print(lst[button])
             buttons.append(InlineKeyboardButton(
                 text=lst[button]['name'],
                 callback_data=f"second_forward_{lst[button]['code']}"))
