@@ -1,8 +1,9 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
-from database.database import get_trades_list, get_trades_tasks_list, get_forward_trade
+from database.database import get_trades_list, get_trades_tasks_list, get_partner_worker_list, \
+    get_result_list, get_forward_supervisor_controller
 
-from lexicon.lexicon import LEXICON
+from lexicon import lexicon
 
 # [InlineKeyboardButton(text='but_1', url=None, callback_data='but_1', web_app=None, login_url=None,
 # switch_inline_query=None, switch_inline_query_current_chat=None, callback_game=None, pay=None)]
@@ -29,7 +30,7 @@ def create_new_tasks_inline_kb(task):
 
     done_button: InlineKeyboardButton = InlineKeyboardButton(
         text="Выполнена ✅",
-        callback_data=f"done_{task['number']}")
+        callback_data=f"ok_{task['number']}")
     not_done_button: InlineKeyboardButton = InlineKeyboardButton(
         text="Не выполнена ❌",
         callback_data=f"dont_{task['number']}")
@@ -50,6 +51,7 @@ def create_trades_forward_inline_kb(width: int, lst: list) -> InlineKeyboardMark
 
     if lst:
         for button in range(len(lst)):
+            # print(lst[button])
             buttons.append(InlineKeyboardButton(
                 text=lst[button]['name'],
                 callback_data=f"second_forward_{lst[button]['code']}"))
@@ -59,7 +61,60 @@ def create_trades_forward_inline_kb(width: int, lst: list) -> InlineKeyboardMark
     return kb_builder.as_markup()
 
 
+def create_types_done_inline_kb(width: int, dct: dict) -> InlineKeyboardMarkup:
+
+    kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+
+    buttons: list[InlineKeyboardButton] = []
+
+    if dct:
+        for button in dct:
+            buttons.append(InlineKeyboardButton(
+                text=dct[button],
+                callback_data=f"contact_{button}"))
+
+    kb_builder.row(*buttons, width=width)
+
+    return kb_builder.as_markup()
+
+
+def create_result_types_done_inline_kb(width: int, dct: dict) -> InlineKeyboardMarkup:
+
+    kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+
+    buttons: list[InlineKeyboardButton] = []
+
+    if dct:
+        for button in dct:
+            buttons.append(InlineKeyboardButton(
+                text=button['name'],
+                callback_data=f"result_{button['id']}"))
+
+    kb_builder.row(*buttons, width=width)
+
+    return kb_builder.as_markup()
+
+
+def create_contact_person_done_inline_kb(width: int, dct: dict):
+    kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+
+    buttons: list[InlineKeyboardButton] = []
+
+    if dct:
+        for button in dct:
+            buttons.append(InlineKeyboardButton(
+                text=button['name'],
+                callback_data=f"person_{button['id']}"))
+
+    kb_builder.row(*buttons, width=width)
+
+    return kb_builder.as_markup()
+
+
 if __name__ == '__main__':
     # print(create_trades_tasks_inline_kb(1, get_forward_trade('00000000001')['result']))
-    print(get_forward_trade("00000000001"))
-    # print(create_trades_forward_inline_kb(1, get_forward_trade("00000000002")['result']))
+    # print(get_forward_trade("00000000001"))
+    print(create_trades_forward_inline_kb(1, get_forward_supervisor_controller("00000000001")['result']))
+    # print(create_types_done_inline_kb(1, lexicon.TYPES))
+    # print(create_contact_person_done_inline_kb(1, get_partner_worker_list('00000000001')))
+    # print(create_result_types_done_inline_kb(1, get_result_list(1)))

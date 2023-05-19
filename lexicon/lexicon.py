@@ -18,3 +18,12 @@ LEXICON_COMMANDS: dict[str, str] = {
 }
 LEXICON_ALL_TASKS: dict[str, str] = {
 }
+
+TYPES = {
+    'email': "Электронное письмо",
+    'phone': "Телефонный звонок",
+    'meet': "Личная встреча",
+    'e-market': "Электронная торговая площадка",
+    'postmail': "Почтовое письмо",
+    'other': "Прочее"
+}
