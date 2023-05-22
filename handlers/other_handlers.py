@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, ContentType, ReplyKeyboardRemove
@@ -7,22 +9,27 @@ from keyboards.trades_keyboards import create_trades_register_inline_kb, create_
 from lexicon.lexicon import LEXICON
 from services.utils import clear_date
 
+logger = logging.getLogger(__name__)
+
 router: Router = Router()
 
 
 # Команда старт
 @router.message(CommandStart())
 async def process_start_command(message: Message):
+    logger.info(f"Поступила команда старт - {message.from_user.id} - {message.from_user.username}")
     await message.answer(LEXICON[message.text])
 
 
 @router.message(Command(commands='help'))
 async def process_help_command(message: Message):
+    logger.info(f"Поступила команда help - {message.from_user.id} - {message.from_user.username}")
     await message.answer(LEXICON[message.text])
 
 
 @router.message(Command(commands='register'))
 async def process_register_command(message: Message, ):
+    logger.info(f"Поступила команда регистрации - {message.from_user.id} - {message.from_user.username}")
     await message.answer(
         text='Для регистрации необходимо нажать кнопку "Передать телефон"',
         reply_markup=create_trades_register_inline_kb())
@@ -32,13 +39,15 @@ async def process_register_command(message: Message, ):
 async def new_tasks_command(message: Message):
 
     tasks_list = get_trades_tasks_list(message.from_user.id)
-
+    logger.info(f"Поступила команда tasks - {message.from_user.id} - {message.from_user.username}")
     if len(tasks_list) > 0:
 
         for task in tasks_list:
             date = clear_date(task)
             text = f"""
-            Задача номер {str(task['number'])}\nот {date}\n\n"{task['name']}"\n\n<b>Автор:</b>\n{ task['author']['name']}\n<b>Основание:</b>\n{task['base']['name']}\n<b>Комментарий автора:</b>\n{task['author_comment']['comment']}
+            Задача номер {str(task['number'])}\nот {date}\n\n"{task['name']}"\n\n<b>Автор:</b>\n
+            { task['author']['name']}\n<b>Основание:</b>\n{task['base']['name']}\n<b>Комментарий автора:</b>\n
+            {task['author_comment']['comment']}
             """
             await message.answer(
                     text=text,
@@ -54,6 +63,7 @@ async def get_contact(message: ContentType.CONTACT):
     chat_id = message.contact.user_id
     message.delete()
     response = put_register(phone=phone, chat_id=chat_id)
+    logger.info(f"Передан номер телефона - {phone} - {message.from_user.id} - {message.from_user.username}")
     if response['status']:
         return await message.reply(text=response['message'], reply_markup=ReplyKeyboardRemove())
     else:

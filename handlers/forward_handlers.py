@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from aiogram import Router
 from aiogram.filters import Text, StateFilter
@@ -10,6 +11,10 @@ from database.database import get_task_detail, get_forward_supervisor_controller
 from forms.user_form import ForwardTaskForm
 from keyboards.trades_keyboards import create_trades_forward_inline_kb
 from services.utils import clear_date
+from config_data.config import DELETE_MESSAGE_TIMER
+
+
+logger = logging.getLogger(__name__)
 
 router: Router = Router()
 
@@ -17,12 +22,21 @@ router: Router = Router()
 @router.callback_query(Text(startswith='first_forward'), StateFilter(default_state))
 async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     task_number = callback.data.split("_")[2]
+
+    logger.info(f"Получен ответ на переадресацию задачи {task_number} от {callback.message.from_user.id} - "
+                f"{callback.from_user.username}")
+
     await state.update_data(task_number=task_number)
+
+    logger.info(
+        f"Записаны данные в state {await state.get_data()} - {callback.from_user.id} - {callback.from_user.username}")
+
     task = get_task_detail(task_number)
     date = clear_date(task)
 
     text = f"""
-        Переадресовать задачу №{task['number']} от {date}\n\n"{task['name']}"\n\n<b>Автор:</b> {task['author']['name']}\n<b>Основание:</b> {task['base']['name']}
+        Переадресовать задачу №{task['number']} от {date}\n\n"{task['name']}"\n\n<b>Автор:</b> {task['author']['name']}
+        \n<b>Основание:</b> {task['base']['name']}
     """
 
     trades_data = get_forward_supervisor_controller(task['worker']['code'])
@@ -32,8 +46,9 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
             text=text,
             reply_markup=create_trades_forward_inline_kb(1, trades_data['result']))
 
-    await asyncio.sleep(10)
+    await asyncio.sleep(DELETE_MESSAGE_TIMER)
     await callback.message.delete()
+    logger.info(f"Сообщение_first по задаче {task['number']} удалено")
 
 
 @router.callback_query(Text(startswith='second_forward'), StateFilter(default_state))
@@ -41,7 +56,13 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
 
     author_number = callback.data.split("_")[2]
     await state.update_data(next_user_id=author_number)
+    task = await state.get_data()
+    logger.info(f"Получен номер {author_number} адресуемого по задаче {task['task_number']} от "
+                f"{callback.message.from_user.id} - "
+                f"{callback.from_user.username}")
     data = await state.get_data()
+    logger.info(f"Записаны данные {task} от {callback.message.from_user.id} - "
+                f"{callback.from_user.username}")
     task = get_task_detail(data['task_number'])
     date = clear_date(task)
 
@@ -58,11 +79,20 @@ async def add_forward_comment(message: Message, state: FSMContext):
     await state.update_data(comment=message.text)
     await state.update_data(comment_id=comment_id)
     data = await state.get_data()
-
+    logger.info(f"Получен комментарий '{message.text}' к задаче {data['task_number']} - "
+                f"{message.from_user.id} - {message.from_user.username}")
+    logger.info(f"Записаны в state данные {data} к задаче {data['task_number']} - "
+                f"{message.from_user.id} - {message.from_user.username}")
     if post_forward_task(number=data['task_number'], comment_id=data['comment_id'], new_worker=data['next_user_id'],
                          author=message.from_user.id):
         await state.clear()
+        logger.info(f"Очищены в state данные к задаче {data['task_number']} - "
+                    f"{message.from_user.id} - {message.from_user.username}")
+        logger.info(f"Задача №{data['task_number']} переадресована - "
+                    f"{message.from_user.id} - {message.from_user.username}")
         await message.answer(f"Задача №{data['task_number']} переадресована")
     else:
+        logger.info(f"Ошибка в задаче  №{data['task_number']} - "
+                    f"{message.from_user.id} - {message.from_user.username}")
         await message.answer(f"Произошла ошибка, позвоните в тех.поддержку")
 

@@ -1,8 +1,7 @@
 import datetime
 import json
 import requests
-
-BASE_URL = "http://192.168.80.224:8000/api/v1/"
+from config_data.config import BASE_URL
 
 
 def get_trades_list():
@@ -39,9 +38,9 @@ def post_dont_task(number, comment_id):
     task['worker_comment'] = comment_id
     r = requests.put(url=f"{BASE_URL}tasks/", data=task)
     if r.status_code == 201:
-        return True
+        return {'status': True, 'text': f"{r.status_code}"}
     else:
-        return False
+        return {'status': False, 'text': f"{r.status_code}"}
 
 
 def post_forward_task(number, comment_id, new_worker, author):
@@ -113,18 +112,18 @@ def put_register(phone: str, chat_id: str):
 
 def get_forward_supervisor_controller(number: str) -> dict:
 
-    result = []
+    result_list = []
     trades_list = requests.get(url=f"{BASE_URL}workers/{number}/")
     controller = requests.get(url=f"{BASE_URL}worker_f/?controller=true")
     supervisor_id = trades_list.json()['supervisor']
     supervisor = requests.get(url=f"{BASE_URL}supervisors/{supervisor_id}/")
-    result.append(supervisor.json())
-    result.append(controller.json()[0])
+    result_list.append(supervisor.json())
+    result_list.append(controller.json()[0])
 
     if trades_list.status_code == 200:
-        return {'status': True, 'result': result}
+        return {'status': True, 'result': result_list}
     else:
-        return {'status': False, 'result': result}
+        return {'status': False, 'result': result_list}
 
 
 def get_worker(author_code):
@@ -213,5 +212,5 @@ if __name__ == '__main__':
     # print(get_result_detail(1))
     # get_task_detail("00000000013")
     # print(get_forward_supervisor_controller("00000000001")['result'])
-    result = {'task_number': '00000000023', 'task_type': 'other', 'contact_person': 'Пупкин Вася_2', 'result': 'ОБЕЩАНИЕ ОПЛАТИТЬ', 'control_date': datetime.datetime(2023, 5, 25, 0, 0), 'worker_comment': 'Комм'}
-    print(get_ready_result_task(result=result, chat_id=239289123))
+    # print(get_ready_result_task(, chat_id=239289123))
+    pass

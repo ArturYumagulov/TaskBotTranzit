@@ -1,6 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
-from database.database import get_forward_supervisor_controller
 
 
 def create_trades_register_inline_kb():
@@ -12,11 +11,9 @@ def create_trades_register_inline_kb():
         request_contact=True)
 
     kb_builder.add(contact_btn)
-
     keyboard: ReplyKeyboardMarkup = kb_builder.as_markup(
         resize_keyboard=True,
         one_time_keyboard=True)
-
     return keyboard
 
 
@@ -33,7 +30,6 @@ def create_new_tasks_inline_kb(task):
         callback_data=f"first_forward_{task['number']}")
     keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
         inline_keyboard=[[done_button], [not_done_button], [forward_button]])
-
     return keyboard
 
 
@@ -50,7 +46,6 @@ def create_trades_forward_inline_kb(width: int, lst: list) -> InlineKeyboardMark
                 callback_data=f"second_forward_{lst[button]['code']}"))
 
     kb_builder.row(*buttons, width=width)
-
     return kb_builder.as_markup()
 
 
@@ -67,7 +62,6 @@ def create_types_done_inline_kb(width: int, dct: dict) -> InlineKeyboardMarkup:
                 callback_data=f"contact_{button}"))
 
     kb_builder.row(*buttons, width=width)
-
     return kb_builder.as_markup()
 
 
@@ -84,7 +78,6 @@ def create_result_types_done_inline_kb(width: int, dct: dict) -> InlineKeyboardM
                 callback_data=f"result_{button['id']}"))
 
     kb_builder.row(*buttons, width=width)
-
     return kb_builder.as_markup()
 
 
@@ -100,7 +93,6 @@ def create_contact_person_done_inline_kb(width: int, dct: dict):
                 callback_data=f"person_{button['id']}"))
 
     kb_builder.row(*buttons, width=width)
-
     return kb_builder.as_markup()
 
 
