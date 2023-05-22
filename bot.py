@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from config_data.config import Config, load_config
-from handlers import other_handlers, user_handlers, dont_handler
+from handlers import other_handlers, done_handlers, dont_handler, forward_handlers
 from keyboards.main_menu import set_main_menu
 
 logger = logging.getLogger(__name__)
@@ -35,8 +35,9 @@ async def main():
     await set_main_menu(bot)
 
     # Регистриуем роутеры в диспетчере
-    dp.include_router(user_handlers.router)
+    dp.include_router(done_handlers.router)
     dp.include_router(dont_handler.router)
+    dp.include_router(forward_handlers.router)
     dp.include_router(other_handlers.router)
 
     # Пропускаем накопившиеся апдейты и запускаем polling

@@ -1,3 +1,4 @@
+import datetime
 import json
 import requests
 
@@ -26,19 +27,17 @@ def get_base(number):
 
 
 def get_task_detail(number):
-    r = requests.get(url=f"{BASE_URL}tasks/{number}/")
+    r = requests.get(url=f"{BASE_URL}all-tasks/{number}/")
     return r.json()
 
 
 def post_dont_task(number, comment_id):
 
-    task = get_task_detail(number)
+    task = requests.get(url=f"{BASE_URL}tasks/{number}/").json()
     task['status'] = "Не выполнено"
     task['edited'] = True
     task['worker_comment'] = comment_id
-
     r = requests.put(url=f"{BASE_URL}tasks/", data=task)
-
     if r.status_code == 201:
         return True
     else:
@@ -47,7 +46,8 @@ def post_dont_task(number, comment_id):
 
 def post_forward_task(number, comment_id, new_worker, author):
 
-    task = get_task_detail(number)
+    task = requests.get(url=f"{BASE_URL}tasks/{number}/").json()
+
     new_author = get_worker(author)
     task['status'] = "Переадресована"
     task['edited'] = True
@@ -159,7 +159,8 @@ def get_result_data_detail(result_id):
 
 def get_ready_result_task(result, chat_id):
 
-    task = get_task_detail(result['task_number'])
+    task = requests.get(url=f"{BASE_URL}tasks/{result['task_number']}/").json()
+
     new_worker_comment = {
         "comment": result['worker_comment'],
         "worker": task['worker']
@@ -210,4 +211,7 @@ if __name__ == '__main__':
     # print(post_forward_task(number="00000000013", new_worker="00000000001", author="239289123", comment_id=13))
     # print(get_result_list(1))
     # print(get_result_detail(1))
-    print(get_forward_supervisor_controller("00000000001")['result'])
+    # get_task_detail("00000000013")
+    # print(get_forward_supervisor_controller("00000000001")['result'])
+    result = {'task_number': '00000000023', 'task_type': 'other', 'contact_person': 'Пупкин Вася_2', 'result': 'ОБЕЩАНИЕ ОПЛАТИТЬ', 'control_date': datetime.datetime(2023, 5, 25, 0, 0), 'worker_comment': 'Комм'}
+    print(get_ready_result_task(result=result, chat_id=239289123))
