@@ -1,124 +1,200 @@
-import datetime
+import logging
 import json
 import requests
-from config_data.config import BASE_URL
+from config_data.config import API_BASE_URL, API_METHODS
+
+from config_data.config import CONSTANT_COMMENT_ID
+from services.utils import comparison
+
+logger = logging.getLogger(__name__)
 
 
-def get_trades_list():
-    r = requests.get(url=f'{BASE_URL}workers/')
-    return r.json()
+def get_task_number(task_number):
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['tasks']}{task_number}/")
+    logger.info(f"GET запрос {API_METHODS['tasks']}{task_number}/ - {r.status_code}")
+    return r
+
+
+def get_workers_number(worker_number):
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers']}{worker_number}")
+    logger.info(f"GET запрос {API_METHODS['workers']}{worker_number} - {r.status_code}")
+    return r
+
+
+def get_worker_f_chat_id(author_code):
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?chat_id={author_code}")
+    logger.info(f"GET запрос {API_METHODS['workers_f']}?chat_id={author_code} - {r.status_code}")
+    return r
 
 
 def get_trades_tasks_list(trade_id):
-    worker_req = requests.get(url=f"{BASE_URL}worker_f/?chat_id={trade_id}")
-    r = requests.get(url=f"{BASE_URL}tasks_f/?worker={worker_req.json()[0]['code']}&status=Новая")
-    return r.json()
 
+    worker_req = get_worker_f_chat_id(trade_id)
+    if len(worker_req.json()) > 0:
+        if worker_req.status_code == 200:
+            logger.info(f"Результат GET запрос метод worker_f/ с аргументами chat_id={trade_id} - статус - "
+                        f"{worker_req.status_code}")
+        else:
+            logger.warning(f"Результат GET запрос метод worker_f/ с аргументами chat_id={trade_id} - статус - "
+                           f"{worker_req.status_code}")
+        logger.info(f"GET запрос метод tasks_f/ с аргументами worker={worker_req.json()[0]['code']}&status=Новая")
 
-def get_author(author_code):
-    r = requests.get(url=f"{BASE_URL}workers/{author_code}/")
-    return r.json()
+        r = requests.get(url=f"{API_BASE_URL}tasks_f/?worker={worker_req.json()[0]['code']}&status=Новая")
 
-
-def get_base(number):
-    r = requests.get(url=f"{BASE_URL}base/{number}/")
-    return r.json()
+        if r.status_code == 200:
+            logger.info(f"Результат GET запрос метод tasks_f/ с аргументами worker={worker_req.json()[0]['code']}"
+                        f"&status=Новая - статус - {r.status_code}")
+        else:
+            logger.warning(f"Результат GET запрос метод tasks_f/ с аргументами worker={worker_req.json()[0]['code']}"
+                           f"&status=Новая - статус - {r.status_code}")
+        return {'status': True, 'text': r.json()}
+    else:
+        return {'status': False, 'text': "Вы не зарегистрированы в системе"}
 
 
 def get_task_detail(number):
-    r = requests.get(url=f"{BASE_URL}all-tasks/{number}/")
+    logger.info("GET запрос метод all-tasks")
+    r = requests.get(url=f"{API_BASE_URL}all-tasks/{number}/")
+    if r.status_code == 200:
+        logger.info(f"Результат GET запроса метод all-tasks - {r.status_code}")
+    else:
+        logger.warning(f"Результат GET запроса метод all-tasks - {r.status_code}")
     return r.json()
 
 
 def post_dont_task(number, comment_id):
-
-    task = requests.get(url=f"{BASE_URL}tasks/{number}/").json()
-    task['status'] = "Не выполнено"
-    task['edited'] = True
-    task['worker_comment'] = comment_id
-    r = requests.put(url=f"{BASE_URL}tasks/", data=task)
-    if r.status_code == 201:
-        return {'status': True, 'text': f"{r.status_code}"}
+    # t = requests.get(url=f"{BASE_URL}tasks/{number}/")
+    t = get_task_number(number)
+    if t.status_code == 200:
+        task = t.json()
+        task['status'] = "Не выполнено"
+        task['edited'] = True
+        task['worker_comment'] = comment_id
+        logger.info(f"Создана задача {task}")
+        r = requests.put(url=f"{API_BASE_URL}tasks/", data=task)
+        logger.info(f"PUT запрос метод tasks/ - data={task}")
+        if r.status_code == 201:
+            logger.info(f"PUT запрос метод tasks/ - {r.status_code}")
+            return {'status': True, 'text': f"{r.status_code}"}
+        else:
+            logger.warning(f"PUT запрос метод tasks/ - {r.status_code}")
+            return {'status': False, 'text': f"{r.status_code}"}
     else:
-        return {'status': False, 'text': f"{r.status_code}"}
+        logger.warning(f"GET запрос метод tasks/{number}/ - {t.status_code}")
 
 
 def post_forward_task(number, comment_id, new_worker, author):
 
-    task = requests.get(url=f"{BASE_URL}tasks/{number}/").json()
+    # t = requests.get(url=f"{BASE_URL}tasks/{number}/")
+    t = get_task_number(number)
 
-    new_author = get_worker(author)
-    task['status'] = "Переадресована"
-    task['edited'] = True
-    task['author_comment'] = int(comment_id)
-    task['worker'] = str(new_worker)
-    task['author'] = new_author[0]['code']
-    task['worker_comment'] = 1
+    if t.status_code == 200:
+        task = t.json()
+        logger.info(f"Результат запроса метод tasks/{number}/ - {task} - {t.status_code}")
+        new_author = get_worker_f_chat_id(author).json()
+        task['status'] = "Переадресована"
+        task['edited'] = True
+        task['author_comment'] = int(comment_id)
+        task['worker'] = str(new_worker)
+        task['author'] = new_author[0]['code']
+        task['worker_comment'] = CONSTANT_COMMENT_ID
 
-    r = requests.put(url=f"{BASE_URL}tasks/", data=task)
+        r = requests.put(url=f"{API_BASE_URL}tasks/", data=task)
 
-    if r.status_code == 201:
-        return True
+        if r.status_code == 201:
+            logger.info(f"PUT запрос метод tasks/ - data={task}- {r.status_code}")
+            return True
+        else:
+            logger.warning(f"PUT запрос метод tasks/ - data={task}- {r.status_code}")
+            return False
+
     else:
+        logger.info(f"GET запрос метод tasks/ - {t.status_code}")
         return False
 
 
 def post_add_comment(chat_id, comment, method):
+    """Функция для добавления нового комментария, возвращает ID созданного комментария"""
 
-    worker = requests.get(url=f"{BASE_URL}worker_f/?chat_id={chat_id}")
+    worker = get_worker_f_chat_id(chat_id)
 
-    if method == "worker":
+    if worker.status_code == 200:
+        logger.info(f"GET запрос worker_f/?chat_id={chat_id} - method={method} - {worker.status_code}")
+        if method == "worker":
+            data = {
+                "comment": comment,
+                "worker": worker.json()[0]['code']
+            }
+            r = requests.post(url=f"{API_BASE_URL}worker_comment/", data=data)
+            if r.status_code == 201:
+                logger.info(f"POST запрос worker_comment/ - data={data} - {r.status_code}")
+                return r.json()['id']
+            else:
+                logger.warning(f"POST запрос worker_comment/ - data={data} - {r.status_code}")
+                return False
 
-        data = {
-            "comment": comment,
-            "worker": worker.json()[0]['code']
-        }
+        elif method == "author":
 
-        r = requests.post(url=f"{BASE_URL}worker_comment/", data=data)
-        return r.json()['id']
+            data = {
+                "comment": comment,
+                "author": worker.json()[0]['code']
+            }
+            r = requests.post(url=f"{API_BASE_URL}author_comment/", data=data)
+            if r.status_code == 201:
+                logger.info(f"POST запрос author_comment/ - data={data} - {r.status_code}")
+                return r.json()['id']
+            else:
+                logger.warning(f"POST запрос author_comment/ - data={data} - {r.status_code}")
+                return False
 
-    elif method == "author":
-
-        data = {
-            "comment": comment,
-            "author": worker.json()[0]['code']
-        }
-        r = requests.post(url=f"{BASE_URL}author_comment/", data=data)
-        return r.json()['id']
     else:
+        logger.warning(f"GET запрос worker_f/?chat_id={chat_id} - {worker.status_code}")
         return False
 
 
 def put_register(phone: str, chat_id: str):
+    """Функция отправки PUT запроса к БД, с присвоением chat_id"""
 
     clean_phone = phone.strip('+').replace("-", "").replace("(", "").replace(")", "")
-
-    worker = requests.get(url=f"{BASE_URL}worker_f/?phone={clean_phone}").json()
-
-    if len(worker) <= 0:
-        return {'status': False, 'message': "Данный контакт не существует в системе, обратитесь к своему руководителю"}
-    else:
-        worker[0]['chat_id'] = chat_id
-
-        data = json.dumps(worker)
-
-        update = requests.put(url=f"{BASE_URL}workers/", data=data, headers={'Content-Type': 'application/json'})
-
-        if update.status_code == 201:
-            return {'status': True, 'message': "Регистрация прошла успешно"}
+    logger.info(f"Получен запрос на регистрацию - номер {phone}, chat_id={chat_id}")
+    t = requests.get(url=f"{API_BASE_URL}worker_f/?phone={clean_phone}")
+    if t.status_code == 200:
+        logger.info(f"GET запрос worker_f/?phone={phone} - data={t.json()}- {t.status_code}")
+        worker = t.json()
+        if len(worker) <= 0:
+            logger.warning(f"Пользователь с номером {phone} не найден в системе")
+            return {'status': False,
+                    'message': "Данный контакт не существует в системе, обратитесь к своему руководителю"}
         else:
-            return {'status': False, 'message': "Техническая ошибка. Обратитесь в тех.поддержку"}
+            worker[0]['chat_id'] = chat_id
+            logger.info(f"Пользователю {worker} - назначен chat_id={chat_id}")
+            data = json.dumps(worker)
+            update = requests.put(url=f"{API_BASE_URL}workers/", data=data, headers={'Content-Type': 'application/json'})
+            if update.status_code == 201:
+                logger.info(f"PUT запрос workers/ - data={data} - {update.status_code}")
+                return {'status': True, 'message': "Регистрация прошла успешно"}
+            else:
+                logger.warning(f"PUT запрос workers/ - data={data} - {update.status_code}")
+                return {'status': False, 'message': "Техническая ошибка. Обратитесь в тех.поддержку"}
+    else:
+        logger.warning(f"GET запрос worker_f/?phone={phone} - data={t.json()}- {t.status_code}")
+        return {'status': False, 'message': "Техническая ошибка. Обратитесь в тех.поддержку"}
 
 
-def get_forward_supervisor_controller(number: str) -> dict:
+def get_forward_supervisor_controller(worker_number: str, author_number: str) -> dict:
 
-    result_list = []
-    trades_list = requests.get(url=f"{BASE_URL}workers/{number}/")
-    controller = requests.get(url=f"{BASE_URL}worker_f/?controller=true")
+    trades_list = get_workers_number(worker_number)
+    author_res = get_workers_number(author_number)
+    author = author_res.json()
+    controller_res = requests.get(url=f"{API_BASE_URL}worker_f/?controller=true")
+    logger.info(f"GET запрос worker_f/?controller=true - {controller_res.status_code}")
+    controller = controller_res.json()[0]
     supervisor_id = trades_list.json()['supervisor']
-    supervisor = requests.get(url=f"{BASE_URL}supervisors/{supervisor_id}/")
-    result_list.append(supervisor.json())
-    result_list.append(controller.json()[0])
+    supervisor_res = requests.get(url=f"{API_BASE_URL}supervisors/{supervisor_id}/")
+    logger.info(f"GET запрос supervisors/{supervisor_id}/ - {supervisor_res.status_code}")
+    supervisor = supervisor_res.json()
+
+    result_list = comparison(author_list=author, controller_list=controller, supervisor_list=supervisor)
 
     if trades_list.status_code == 200:
         return {'status': True, 'result': result_list}
@@ -126,47 +202,38 @@ def get_forward_supervisor_controller(number: str) -> dict:
         return {'status': False, 'result': result_list}
 
 
-def get_worker(author_code):
-    r = requests.get(url=f"{BASE_URL}worker_f/?chat_id={author_code}")
-    return r.json()
-
-
 def get_partner_worker_list(partner):
-    r = requests.get(url=f"{BASE_URL}partner-worker_f/?partner={partner}")
+    r = requests.get(url=f"{API_BASE_URL}partner-worker_f/?partner={partner}")
     return r.json()
 
 
 def get_result_list(group):
-    r = requests.get(url=f"{BASE_URL}result-data_f/?group={group}")
+    r = requests.get(url=f"{API_BASE_URL}result-data_f/?group={group}")
     return r.json()
 
 
 def get_partner_worker(contact_person_id):
-    r = requests.get(url=f"{BASE_URL}partner-worker_f/?id={contact_person_id}")
+    r = requests.get(url=f"{API_BASE_URL}partner-worker_f/?id={contact_person_id}")
     return r.json()
 
 
 def get_result_detail(result_id):
-    r = requests.get(url=f"{BASE_URL}result/{result_id}/")
+    r = requests.get(url=f"{API_BASE_URL}result/{result_id}/")
     return r.json()
 
 
 def get_result_data_detail(result_id):
-    r = requests.get(url=f"{BASE_URL}result-data/{result_id}/")
+    r = requests.get(url=f"{API_BASE_URL}result-data/{result_id}/")
     return r.json()
 
 
 def get_ready_result_task(result, chat_id):
 
-    task = requests.get(url=f"{BASE_URL}tasks/{result['task_number']}/").json()
+    task = get_task_number(result['task_number']).json()
 
-    new_worker_comment = {
-        "comment": result['worker_comment'],
-        "worker": task['worker']
-    }
-    add_new_comment = requests.post(url=f"{BASE_URL}worker_comment/", data=new_worker_comment)
-    worker_comment_id = add_new_comment.json()['id']
-    if add_new_comment.status_code == 201:
+    worker_comment_id = post_add_comment(chat_id=chat_id, comment=result['worker_comment'], method="worker")
+
+    if worker_comment_id:
         result_item = {
             "type": result['task_type'],
             "result": result['result'],
@@ -180,7 +247,7 @@ def get_ready_result_task(result, chat_id):
         else:
             result_item["control_date"] = None
 
-        result_re = requests.post(url=f"{BASE_URL}result/", data=result_item)
+        result_re = requests.post(url=f"{API_BASE_URL}result/", data=result_item)
 
         if result_re.status_code == 201:
             result_id = result_re.json()['id']
@@ -188,7 +255,7 @@ def get_ready_result_task(result, chat_id):
             task['status'] = "Выполнено",
             task['worker_comment'] = worker_comment_id
             task['result'] = result_id
-            add_ready_task = requests.put(url=f"{BASE_URL}tasks/", data=task)
+            add_ready_task = requests.put(url=f"{API_BASE_URL}tasks/", data=task)
 
             if add_ready_task.status_code == 201:
                 return {"status": True, 'text': f"Задача {task['number']} выполнена"}
@@ -211,6 +278,6 @@ if __name__ == '__main__':
     # print(get_result_list(1))
     # print(get_result_detail(1))
     # get_task_detail("00000000013")
-    # print(get_forward_supervisor_controller("00000000001")['result'])
+    print(get_forward_supervisor_controller("00000000001", "00000000002"))
     # print(get_ready_result_task(, chat_id=239289123))
-    pass
+    # pass

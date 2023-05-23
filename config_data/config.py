@@ -23,8 +23,17 @@ def load_config(path: str | None = None) -> Config:
                     admin_ids=list(map(int, env.list('ADMIN_IDS')))))
 
 
-DELETE_MESSAGE_TIMER = 3
-BASE_URL = "http://192.168.80.224:8000/api/v1/"
+DELETE_MESSAGE_TIMER = 7
+
+CONSTANT_COMMENT_ID = 1
+
+API_BASE_URL = "http://192.168.80.224:8000/api/v1/"
+
+API_METHODS = {
+    'tasks': "tasks/",
+    'workers': "workers/",
+    'workers_f': "worker_f/"
+}
 
 LOGGING_CONFIG = {
     'version': 1,
@@ -63,6 +72,11 @@ LOGGING_CONFIG = {
             'propagate': False
         },
         'handlers.other_handlers': {
+            'handlers': ['stream_handler'],
+            'level': 'INFO',
+            'propagate': False
+        },
+        'database.database': {
             'handlers': ['stream_handler'],
             'level': 'INFO',
             'propagate': False

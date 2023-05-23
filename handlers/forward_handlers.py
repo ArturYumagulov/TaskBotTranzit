@@ -39,7 +39,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
         \n<b>Основание:</b> {task['base']['name']}
     """
 
-    trades_data = get_forward_supervisor_controller(task['worker']['code'])
+    trades_data = get_forward_supervisor_controller(task['worker']['code'], task['author']['code'])
 
     if trades_data['status']:
         await callback.message.edit_text(
