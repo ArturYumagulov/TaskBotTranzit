@@ -41,10 +41,9 @@ async def new_tasks_command(message: Message):
     tasks_list = get_trades_tasks_list(message.from_user.id)
 
     logger.info(f"Поступила команда tasks - {message.from_user.id} - {message.from_user.username}")
-
     if tasks_list['status']:
-        if len(tasks_list) > 0:
-            for task in tasks_list:
+        if len(tasks_list['text']) > 0:
+            for task in tasks_list['text']:
                 date = clear_date(task)
                 text = f"""
                 Задача номер {str(task['number'])}\nот {date}\n\n"{task['name']}"\n\n<b>Автор:</b>\n{task['author']['name']}\n<b>Основание:</b>\n{task['base']['name']}\n<b>Комментарий автора:</b>\n{task['author_comment']['comment']}

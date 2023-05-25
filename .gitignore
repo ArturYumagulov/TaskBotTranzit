@@ -312,5 +312,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 .idea
+logs/logfile.txt
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,pycharm,python

@@ -32,7 +32,11 @@ API_BASE_URL = "http://192.168.80.224:8000/api/v1/"
 API_METHODS = {
     'tasks': "tasks/",
     'workers': "workers/",
-    'workers_f': "worker_f/"
+    'workers_f': "worker_f/",
+    'partner-worker_f': 'partner-worker_f/',
+    'result-data_f': 'result-data_f/',
+    'result': 'result/',
+    'result-data': 'result-data/'
 }
 
 LOGGING_CONFIG = {
@@ -48,36 +52,43 @@ LOGGING_CONFIG = {
         'stream_handler': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
+        },
+        'file_handler': {
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': 'logs/logfile.txt'
         }
+
+
     },
     'loggers': {
         'bot': {
-            'handlers': ['stream_handler'],
+            'handlers': ['stream_handler', 'file_handler'],
             'level': 'INFO',
             'propagate': False
         },
         'handlers.done_handlers': {
-            'handlers': ['stream_handler'],
+            'handlers': ['stream_handler', 'file_handler'],
             'level': 'INFO',
             'propagate': False
         },
         'handlers.dont_handler': {
-            'handlers': ['stream_handler'],
+            'handlers': ['stream_handler', 'file_handler'],
             'level': 'INFO',
             'propagate': False
         },
         'handlers.forward_handlers': {
-            'handlers': ['stream_handler'],
+            'handlers': ['stream_handler', 'file_handler'],
             'level': 'INFO',
             'propagate': False
         },
         'handlers.other_handlers': {
-            'handlers': ['stream_handler'],
+            'handlers': ['stream_handler', 'file_handler'],
             'level': 'INFO',
             'propagate': False
         },
         'database.database': {
-            'handlers': ['stream_handler'],
+            'handlers': ['stream_handler', 'file_handler'],
             'level': 'INFO',
             'propagate': False
         }
