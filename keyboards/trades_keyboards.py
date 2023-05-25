@@ -97,9 +97,4 @@ def create_contact_person_done_inline_kb(width: int, dct: dict):
 
 
 if __name__ == '__main__':
-    # print(create_trades_tasks_inline_kb(1, get_forward_trade('00000000001')['result']))
-    # print(get_forward_trade("00000000001"))
-    # print(create_trades_forward_inline_kb(1, get_forward_supervisor_controller("00000000001")['result']))
-    # print(create_types_done_inline_kb(1, lexicon.TYPES))
-    print(create_contact_person_done_inline_kb(1, get_partner_worker_list('00000000001')))
-    # print(create_result_types_done_inline_kb(1, get_result_list(1)))
+    pass

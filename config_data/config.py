@@ -36,7 +36,8 @@ API_METHODS = {
     'partner-worker_f': 'partner-worker_f/',
     'result-data_f': 'result-data_f/',
     'result': 'result/',
-    'result-data': 'result-data/'
+    'result-data': 'result-data/',
+    'supervisors': 'supervisors/'
 }
 
 LOGGING_CONFIG = {

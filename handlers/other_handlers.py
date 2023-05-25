@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 router: Router = Router()
 
 
-# Команда старт
 @router.message(CommandStart())
 async def process_start_command(message: Message):
     logger.info(f"Поступила команда старт - {message.from_user.id} - {message.from_user.username}")
@@ -76,4 +75,4 @@ async def get_contact(message: ContentType.CONTACT):
 # не предусмотренные логикой работы бота
 @router.message()
 async def send_echo(message: Message):
-    await message.answer(f'Это эхо! {message.text}')
+    await message.answer(LEXICON['/help'])

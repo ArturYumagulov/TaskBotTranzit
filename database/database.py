@@ -63,7 +63,7 @@ def get_task_detail(number):
 
 
 def post_dont_task(number, comment_id):
-    # t = requests.get(url=f"{BASE_URL}tasks/{number}/")
+
     t = get_task_number(number)
     if t.status_code == 200:
         task = t.json()
@@ -185,12 +185,12 @@ def get_forward_supervisor_controller(worker_number: str, author_number: str) ->
     trades_list = get_workers_number(worker_number)
     author_res = get_workers_number(author_number)
     author = author_res.json()
-    controller_res = requests.get(url=f"{API_BASE_URL}worker_f/?controller=true")
-    logger.info(f"GET запрос worker_f/?controller=true - {controller_res.status_code}")
+    controller_res = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?controller=true")
+    logger.info(f"GET запрос{API_METHODS['workers_f']}?controller=true - {controller_res.status_code}")
     controller = controller_res.json()[0]
     supervisor_id = trades_list.json()['supervisor']
-    supervisor_res = requests.get(url=f"{API_BASE_URL}supervisors/{supervisor_id}/")
-    logger.info(f"GET запрос supervisors/{supervisor_id}/ - {supervisor_res.status_code}")
+    supervisor_res = requests.get(url=f"{API_BASE_URL}{API_METHODS['supervisors']}{supervisor_id}/")
+    logger.info(f"GET запрос {API_METHODS['supervisors']}{supervisor_id}/ - {supervisor_res.status_code}")
     supervisor = supervisor_res.json()
 
     result_list = comparison(author_list=author, controller_list=controller, supervisor_list=supervisor)
@@ -208,9 +208,7 @@ def get_partner_worker_list(partner):
 
 
 def get_result_list(group):
-    print(group)
     r = requests.get(url=f"{API_BASE_URL}{API_METHODS['result-data_f']}?group={group}")
-    print(r.json())
     logger.info(f"GET запрос {API_METHODS['result-data_f']} - {r.status_code}")
     return r.json()
 
@@ -274,7 +272,7 @@ def get_ready_result_task(result, chat_id):
                 return {"status": True, 'text': f"Задача {task['number']} выполнена"}
             else:
                 logger.warning(f"PUT запрос {API_METHODS['tasks']} c data={task} - "
-                            f"{add_ready_task.status_code}")
+                               f"{add_ready_task.status_code}")
                 return {"status": False, 'text': f"Статус {add_ready_task.status_code}"}
 
     else:
