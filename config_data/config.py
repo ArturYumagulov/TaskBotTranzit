@@ -25,7 +25,7 @@ def load_config(path: str | None = None) -> Config:
 
 DELETE_MESSAGE_TIMER = 7
 
-CONSTANT_COMMENT_ID = 1
+CONSTANT_COMMENT_ID = 90
 
 API_BASE_URL = "http://192.168.80.224:8000/api/v1/"
 

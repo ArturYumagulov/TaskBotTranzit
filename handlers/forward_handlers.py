@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from aiogram import Router
-from aiogram.filters import Text, StateFilter
+from aiogram.filters import Text, StateFilter, Command
 from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -92,7 +92,14 @@ async def add_forward_comment(message: Message, state: FSMContext):
                     f"{message.from_user.id} - {message.from_user.username}")
         await message.answer(f"Задача №{data['task_number']} переадресована")
     else:
-        logger.info(f"Ошибка в задаче  №{data['task_number']} - "
-                    f"{message.from_user.id} - {message.from_user.username}")
+        await state.clear()
+        logger.warning(f"Ошибка в задаче  №{data['task_number']} - "
+                       f"{message.from_user.id} - {message.from_user.username}")
         await message.answer(f"Произошла ошибка, позвоните в тех.поддержку")
+
+
+@router.message(Command(commands='reset'))
+async def send_echo(message: Message, state: FSMContext):
+    await state.clear()
+    logger.info(f"Состояние очищено {message.from_user.id}")
 

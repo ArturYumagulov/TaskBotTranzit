@@ -99,12 +99,11 @@ def post_forward_task(number, comment_id, new_worker, author):
         task['worker_comment'] = CONSTANT_COMMENT_ID
 
         r = requests.put(url=f"{API_BASE_URL}tasks/", data=task)
-
         if r.status_code == 201:
             logger.info(f"PUT запрос метод tasks/ - data={task}- {r.status_code}")
             return True
         else:
-            logger.warning(f"PUT запрос метод tasks/ - data={task}- {r.status_code}")
+            logger.warning(f"PUT запрос метод tasks/ - data={task}- {r.status_code} - error - {r.json()}")
             return False
 
     else:

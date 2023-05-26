@@ -139,7 +139,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
         logger.info(f"Сообщение_result по задаче {task['task_number']} удалено")
 
     else:
-        await callback.message.answer(text="Укажите комментарий")
+        await callback.message.answer(text=f"Укажите комментарий к задаче {task['task_number']}")
         await state.set_state(DoneTaskForm.worker_comment)
         await asyncio.sleep(DELETE_MESSAGE_TIMER)
         await callback.message.delete()
@@ -153,9 +153,9 @@ async def process_simple_calendar(callback: CallbackQuery, callback_data: dict, 
                 f"{callback.message.from_user.username}")
     if selected:
         await state.update_data(control_date=date)
-        await callback.message.answer(text="Укажите комментарий")
-        await state.set_state(DoneTaskForm.worker_comment)
         task = await state.get_data()
+        await callback.message.answer(text=f"Укажите комментарий к задаче {task['task_number']}")
+        await state.set_state(DoneTaskForm.worker_comment)
         await asyncio.sleep(DELETE_MESSAGE_TIMER)
         await callback.message.delete()
         logger.info(f"Календарь по задаче {task['task_number']} удален")

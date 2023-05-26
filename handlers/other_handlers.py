@@ -71,8 +71,8 @@ async def get_contact(message: ContentType.CONTACT):
         return await message.reply(text=response['message'], reply_markup=ReplyKeyboardRemove())
 
 
-# Этот хэндлер будет реагировать на любые сообщения пользователя,
-# не предусмотренные логикой работы бота
-@router.message()
-async def send_echo(message: Message):
-    await message.answer(LEXICON['/help'])
+# # Этот хэндлер будет реагировать на любые сообщения пользователя,
+# # не предусмотренные логикой работы бота
+# @router.message()
+# async def send_echo(message: Message):
+#     await message.answer(LEXICON['/help'])
