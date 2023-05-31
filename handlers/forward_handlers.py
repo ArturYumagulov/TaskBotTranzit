@@ -35,7 +35,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     date = clear_date(task)
 
     text = f"""
-        Переадресовать задачу №{task['number']} от {date}\n\n"{task['name']}"\n\n<b>Автор:</b> {task['author']['name']}
+        Переадресовать задачу от {date}\n\n"{task['name']}"\n\n<b>Автор:</b> {task['author']['name']}
         \n<b>Основание:</b> {task['base']['name']}
     """
 
@@ -67,7 +67,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     date = clear_date(task)
 
     text = f"""
-         Укажите комментарий к задаче №{task['number']} от {date}\n\n"{task['name']}"\n
+         Укажите комментарий к задаче от {date}\n\n"{task['name']}"\n
      """
     await callback.message.answer(text=text)
     await state.set_state(ForwardTaskForm.comment)
@@ -83,6 +83,7 @@ async def add_forward_comment(message: Message, state: FSMContext):
                 f"{message.from_user.id} - {message.from_user.username}")
     logger.info(f"Записаны в state данные {data} к задаче {data['task_number']} - "
                 f"{message.from_user.id} - {message.from_user.username}")
+    task = get_task_detail(data['task_number'])
     if post_forward_task(number=data['task_number'], comment_id=data['comment_id'], new_worker=data['next_user_id'],
                          author=message.from_user.id):
         await state.clear()
@@ -90,10 +91,10 @@ async def add_forward_comment(message: Message, state: FSMContext):
                     f"{message.from_user.id} - {message.from_user.username}")
         logger.info(f"Задача №{data['task_number']} переадресована - "
                     f"{message.from_user.id} - {message.from_user.username}")
-        await message.answer(f"Задача №{data['task_number']} переадресована")
+        await message.answer(f"Задача №{task['name']} переадресована")
     else:
         await state.clear()
-        logger.warning(f"Ошибка в задаче  №{data['task_number']} - "
+        logger.warning(f"Ошибка в задаче  №{task['name']} - "
                        f"{message.from_user.id} - {message.from_user.username}")
         await message.answer(f"Произошла ошибка, позвоните в тех.поддержку")
 

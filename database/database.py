@@ -268,7 +268,7 @@ def get_ready_result_task(result, chat_id):
             if add_ready_task.status_code == 201:
                 logger.info(f"PUT запрос {API_METHODS['tasks']} c data={task} - "
                             f"{add_ready_task.status_code}")
-                return {"status": True, 'text': f"Задача {task['number']} выполнена"}
+                return {"status": True, 'text': f"Задача {task['name']} выполнена"}
             else:
                 logger.warning(f"PUT запрос {API_METHODS['tasks']} c data={task} - "
                                f"{add_ready_task.status_code}")

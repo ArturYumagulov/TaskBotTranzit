@@ -45,7 +45,7 @@ async def new_tasks_command(message: Message):
             for task in tasks_list['text']:
                 date = clear_date(task)
                 text = f"""
-                Задача номер {str(task['number'])}\nот {date}\n\n"{task['name']}"\n\n<b>Автор:</b>\n{task['author']['name']}\n<b>Основание:</b>\n{task['base']['name']}\n<b>Комментарий автора:</b>\n{task['author_comment']['comment']}
+                Задача от {date}\n\n"{task['name']}"\n\n<b>Автор:</b>\n{task['author']['name']}\n<b>Основание:</b>\n{task['base']['name']}\n<b>Комментарий автора:</b>\n{task['author_comment']['comment']}
                 """
 
                 await message.answer(

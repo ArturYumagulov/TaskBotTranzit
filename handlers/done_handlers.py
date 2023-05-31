@@ -57,13 +57,13 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     date = clear_date(task)
 
     text = f"""
-         Укажите какое действие было сделано к задаче №{task['number']} от {date}\n\n"{task['name']}"\n
+         Укажите какое действие было сделано к задаче от {date}\n\n"{task['name']}"\n
      """
     await callback.message.answer(text=text, reply_markup=create_types_done_inline_kb(1, lexicon.TYPES))
     logger.info(f"Создана клавиатура c 'contacts'")
     await asyncio.sleep(DELETE_MESSAGE_TIMER)
     await callback.message.delete()
-    logger.info(f"Сообщение_ok по задаче {task_number} удалено")
+    logger.info(f"Сообщение_ok по задаче {task['name']} удалено")
 
 
 @router.callback_query(Text(text=[f"contact_{x}" for x in lexicon.TYPES.keys()]))
@@ -97,12 +97,12 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     await state.update_data(contact_person=partner_worker[0]['name'])
     task_number = await state.get_data()
     task = get_task_detail(task_number['task_number'])
-    logger.info(f"Получены контактное лицо - {partner_worker[0]['name']} - к задаче {task_number['task_number']}")
+    logger.info(f"Получены контактное лицо - {partner_worker[0]['name']} - к задаче {task['name']}")
     logger.info(f"Записаны данные в state {await state.get_data()}")
     date = clear_date(task)
 
     text = f"""
-            Выберите результат действия к задаче №{task['number']} от {date}\n\n
+            Выберите результат действия к задаче {task['name']} от {date}\n\n
             """
 
     await callback.message.answer(text=text, reply_markup=create_result_types_done_inline_kb(1, get_result_list(1)))
@@ -117,6 +117,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     result_data = get_result_data_detail(result_id)
     await state.update_data(result=result_data['name'])
     task = await state.get_data()
+    tasks_data = get_task_detail(task['task_number'])
     logger.info(f"Получен результат - {result_data['name']} - к задаче {task['task_number']} - "
                 f"{callback.message.from_user.id} - "
                 f"{callback.message.from_user.username}")
@@ -139,7 +140,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
         logger.info(f"Сообщение_result по задаче {task['task_number']} удалено")
 
     else:
-        await callback.message.answer(text=f"Укажите комментарий к задаче {task['task_number']}")
+        await callback.message.answer(text=f"Укажите комментарий к задаче {tasks_data['name']}")
         await state.set_state(DoneTaskForm.worker_comment)
         await asyncio.sleep(DELETE_MESSAGE_TIMER)
         await callback.message.delete()
@@ -154,7 +155,8 @@ async def process_simple_calendar(callback: CallbackQuery, callback_data: dict, 
     if selected:
         await state.update_data(control_date=date)
         task = await state.get_data()
-        await callback.message.answer(text=f"Укажите комментарий к задаче {task['task_number']}")
+        tasks_data = get_task_detail(task['task_number'])
+        await callback.message.answer(text=f"Укажите комментарий к задаче {tasks_data['name']}")
         await state.set_state(DoneTaskForm.worker_comment)
         await asyncio.sleep(DELETE_MESSAGE_TIMER)
         await callback.message.delete()

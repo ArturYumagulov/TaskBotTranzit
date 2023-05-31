@@ -53,10 +53,10 @@ async def process_dont_press(callback: CallbackQuery, state: FSMContext):
     date = clear_date(task)
 
     text = f"""
-        Укажите комментарий к задаче №{task['number']} от {date}\n\n"{task['name']}"\n
+        Укажите комментарий к задаче от {date}\n\n"{task['name']}"\n
     """
     await callback.message.answer(text=text)
     await state.set_state(Form.comment)
     await asyncio.sleep(DELETE_MESSAGE_TIMER)
     await callback.message.delete()
-    logger.info(f"Сообщение_ok по задаче {task['number']} удалено")
+    logger.info(f"Сообщение_ok по задаче {task['name']} удалено")
