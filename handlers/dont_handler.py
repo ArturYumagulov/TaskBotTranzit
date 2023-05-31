@@ -25,6 +25,8 @@ async def add_dont_comment(message: Message, state: FSMContext):
     await state.update_data(comment=message.text)
     await state.update_data(comment_id=comment_id)
     task = await state.get_data()
+    await asyncio.sleep(DELETE_MESSAGE_TIMER)
+    await message.delete()
     logger.info(f"Комментарий к задаче {task['task']} - {message.from_user.id} - "
                 f"{message.from_user.username}")
     data = await state.get_data()
