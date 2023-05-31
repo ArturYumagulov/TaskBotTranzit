@@ -67,7 +67,7 @@ def post_dont_task(number, comment_id):
     t = get_task_number(number)
     if t.status_code == 200:
         task = t.json()
-        task['status'] = "Не выполнено"
+        task['status'] = "Отклонена"
         task['edited'] = True
         task['worker_comment'] = comment_id
         logger.info(f"Создана задача {task}")

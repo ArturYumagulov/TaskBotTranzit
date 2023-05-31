@@ -23,7 +23,7 @@ def create_new_tasks_inline_kb(task):
         text="Выполнена ✅",
         callback_data=f"ok_{task['number']}")
     not_done_button: InlineKeyboardButton = InlineKeyboardButton(
-        text="Не выполнена ❌",
+        text="Отклонена ❌",
         callback_data=f"dont_{task['number']}")
     forward_button: InlineKeyboardButton = InlineKeyboardButton(
         text="Переадресовать ↪",
