@@ -31,7 +31,7 @@ async def add_dont_comment(message: Message, state: FSMContext):
     res = post_dont_task(number=data['task'], comment_id=data['comment_id'])
     if res['status']:
         await state.clear()
-        await message.answer(f"Задача №{data['task']} не выполнена")
+        await message.answer(f"Задача №{data['task']} отклонена")
         logger.info(f"Результат задачи {data['task']} успешно сохранен - {res['text']} - "
                     f"{message.from_user.id} - {message.from_user.username}")
     else:
