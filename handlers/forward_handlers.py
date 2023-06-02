@@ -89,12 +89,12 @@ async def add_forward_comment(message: Message, state: FSMContext):
         await state.clear()
         logger.info(f"Очищены в state данные к задаче {data['task_number']} - "
                     f"{message.from_user.id} - {message.from_user.username}")
-        logger.info(f"Задача №{data['task_number']} переадресована - "
+        logger.info(f"Задача {data['task_number']} переадресована - "
                     f"{message.from_user.id} - {message.from_user.username}")
-        await message.answer(f"Задача №{task['name']} переадресована")
+        await message.answer(f"Задача {task['name']} переадресована")
     else:
         await state.clear()
-        logger.warning(f"Ошибка в задаче  №{task['name']} - "
+        logger.warning(f"Ошибка в задаче  {task['name']} - "
                        f"{message.from_user.id} - {message.from_user.username}")
         await message.answer(f"Произошла ошибка, позвоните в тех.поддержку")
 
