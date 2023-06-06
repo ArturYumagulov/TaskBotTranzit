@@ -6,7 +6,8 @@ from aiogram.filters import Text, StateFilter
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
-from aiogram3_calendar import simple_cal_callback, SimpleCalendar
+from aiogram3_calendar import simple_cal_callback
+from keyboards.calendar import MySimpleCalendar
 
 from database.database import get_task_detail, get_partner_worker_list, get_result_list, get_partner_worker, \
     get_result_data_detail, get_ready_result_task
@@ -149,7 +150,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(simple_cal_callback.filter())
 async def process_simple_calendar(callback: CallbackQuery, callback_data: dict, state: FSMContext):
-    selected, date = await SimpleCalendar().process_selection(callback, callback_data)
+    selected, date = await MySimpleCalendar().my_process_selection(callback, callback_data)
     logger.info(f"Установлена дата {date}  - {callback.message.from_user.id} - "
                 f"{callback.message.from_user.username}")
     if selected:
