@@ -6,7 +6,7 @@ from aiogram.filters import Text, StateFilter
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
-from aiogram3_calendar import simple_cal_callback
+from aiogram3_calendar import simple_cal_callback, SimpleCalendar
 from keyboards.calendar import MySimpleCalendar
 
 from database.database import get_task_detail, get_partner_worker_list, get_result_list, get_partner_worker, \
