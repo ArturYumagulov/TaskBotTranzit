@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 from environs import Env
 
+env = Env()
+Env.read_env()
 
 @dataclass
 class TgBot:
@@ -16,7 +18,6 @@ class Config:
 
 
 def load_config(path: str | None = None) -> Config:
-    env = Env()
     env.read_env(path)
     return Config(tg_bot=TgBot(
                     token=env('BOT_TOKEN'),
@@ -25,9 +26,12 @@ def load_config(path: str | None = None) -> Config:
 
 DELETE_MESSAGE_TIMER = 7
 
-CONSTANT_COMMENT_ID = 90
+CONSTANT_COMMENT_ID = 1
 
 API_BASE_URL = "http://192.168.80.65/api/v1/"
+# API_BASE_URL = "http://127.0.0.1:8000/api/v1/"
+
+AUTH_DATA = {'username': env('BOT_USERNAME'), 'password': env('PASSWORD')}
 
 API_METHODS = {
     'tasks': "tasks/",
@@ -37,7 +41,8 @@ API_METHODS = {
     'result-data_f': 'result-data_f/',
     'result': 'result/',
     'result-data': 'result-data/',
-    'supervisors': 'supervisors/'
+    'supervisors': 'supervisors/',
+    'auth': 'token-auth/'
 }
 
 LOGGING_CONFIG = {

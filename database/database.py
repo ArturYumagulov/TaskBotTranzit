@@ -1,7 +1,7 @@
 import logging
 import json
 import requests
-from config_data.config import API_BASE_URL, API_METHODS
+from config_data.config import API_BASE_URL, API_METHODS, AUTH_DATA, CONSTANT_COMMENT_ID
 
 from config_data.config import CONSTANT_COMMENT_ID
 from services.utils import comparison
@@ -9,20 +9,29 @@ from services.utils import comparison
 logger = logging.getLogger(__name__)
 
 
+def get_token():
+    r = requests.post(url=f"{API_BASE_URL}{API_METHODS['auth']}", data={'username': AUTH_DATA['username'],
+                                                                        'password': AUTH_DATA['password']})
+    return r.json()['token']
+
+
 def get_task_number(task_number):
-    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['tasks']}{task_number}/")
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['tasks']}{task_number}/",
+                     headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['tasks']}{task_number}/ - {r.status_code}")
     return r
 
 
 def get_workers_number(worker_number):
-    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers']}{worker_number}")
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers']}{worker_number}",
+                     headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['workers']}{worker_number} - {r.status_code}")
     return r
 
 
 def get_worker_f_chat_id(author_code):
-    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?chat_id={author_code}")
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?chat_id={author_code}",
+                     headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['workers_f']}?chat_id={author_code} - {r.status_code}")
     return r
 
@@ -39,7 +48,8 @@ def get_trades_tasks_list(trade_id):
                            f"{worker_req.status_code}")
         logger.info(f"GET запрос метод tasks_f/ с аргументами worker={worker_req.json()[0]['code']}&status=Новая")
 
-        r = requests.get(url=f"{API_BASE_URL}tasks_f/?worker={worker_req.json()[0]['code']}&status=Новая")
+        r = requests.get(url=f"{API_BASE_URL}tasks_f/?worker={worker_req.json()[0]['code']}&status=Новая",
+                         headers={'Authorization': f"Token {get_token()}"})
 
         if r.status_code == 200:
             logger.info(f"Результат GET запрос метод tasks_f/ с аргументами worker={worker_req.json()[0]['code']}"
@@ -54,7 +64,7 @@ def get_trades_tasks_list(trade_id):
 
 def get_task_detail(number):
     logger.info("GET запрос метод all-tasks")
-    r = requests.get(url=f"{API_BASE_URL}all-tasks/{number}/")
+    r = requests.get(url=f"{API_BASE_URL}all-tasks/{number}/", headers={'Authorization': f"Token {get_token()}"})
     if r.status_code == 200:
         logger.info(f"Результат GET запроса метод all-tasks - {r.status_code}")
     else:
@@ -71,7 +81,7 @@ def post_dont_task(number, comment_id):
         task['edited'] = True
         task['worker_comment'] = comment_id
         logger.info(f"Создана задача {task}")
-        r = requests.put(url=f"{API_BASE_URL}tasks/", data=task)
+        r = requests.put(url=f"{API_BASE_URL}tasks/", data=task, headers={'Authorization': f"Token {get_token()}"})
         logger.info(f"PUT запрос метод tasks/ - data={task}")
         if r.status_code == 201:
             logger.info(f"PUT запрос метод tasks/ - {r.status_code}")
@@ -98,7 +108,7 @@ def post_forward_task(number, comment_id, new_worker, author):
         task['author'] = new_author[0]['code']
         task['worker_comment'] = CONSTANT_COMMENT_ID
 
-        r = requests.put(url=f"{API_BASE_URL}tasks/", data=task)
+        r = requests.put(url=f"{API_BASE_URL}tasks/", data=task, headers={'Authorization': f"Token {get_token()}"})
         if r.status_code == 201:
             logger.info(f"PUT запрос метод tasks/ - data={task}- {r.status_code}")
             return True
@@ -123,7 +133,10 @@ def post_add_comment(chat_id, comment, method):
                 "comment": comment,
                 "worker": worker.json()[0]['code']
             }
-            r = requests.post(url=f"{API_BASE_URL}worker_comment/", data=data)
+            r = requests.post(url=f"{API_BASE_URL}worker_comment/", data=json.dumps(data),
+                              headers={'Authorization': f"Token {get_token()}",
+                                       "Content-Type": 'application/json'})
+
             if r.status_code == 201:
                 logger.info(f"POST запрос worker_comment/ - data={data} - {r.status_code}")
                 return r.json()['id']
@@ -137,7 +150,9 @@ def post_add_comment(chat_id, comment, method):
                 "comment": comment,
                 "author": worker.json()[0]['code']
             }
-            r = requests.post(url=f"{API_BASE_URL}author_comment/", data=data)
+            r = requests.post(url=f"{API_BASE_URL}author_comment/", data=json.dumps(data),
+                              headers={'Authorization': f"Token {get_token()}",
+                                       "Content-Type": 'application/json'})
             if r.status_code == 201:
                 logger.info(f"POST запрос author_comment/ - data={data} - {r.status_code}")
                 return r.json()['id']
@@ -155,7 +170,8 @@ def put_register(phone: str, chat_id: str):
 
     clean_phone = phone.strip('+').replace("-", "").replace("(", "").replace(")", "")
     logger.info(f"Получен запрос на регистрацию - номер {phone}, chat_id={chat_id}")
-    t = requests.get(url=f"{API_BASE_URL}worker_f/?phone={clean_phone}")
+    t = requests.get(url=f"{API_BASE_URL}worker_f/?phone={clean_phone}",
+                     headers={'Authorization': f"Token {get_token()}"})
     if t.status_code == 200:
         logger.info(f"GET запрос worker_f/?phone={phone} - data={t.json()}- {t.status_code}")
         worker = t.json()
@@ -167,7 +183,8 @@ def put_register(phone: str, chat_id: str):
             worker[0]['chat_id'] = chat_id
             logger.info(f"Пользователю {worker} - назначен chat_id={chat_id}")
             data = json.dumps(worker)
-            update = requests.put(url=f"{API_BASE_URL}workers/", data=data, headers={'Content-Type': 'application/json'})
+            update = requests.put(url=f"{API_BASE_URL}workers/", data=data,
+                                  headers={'Authorization': f"Token {get_token()}"})
             if update.status_code == 201:
                 logger.info(f"PUT запрос workers/ - data={data} - {update.status_code}")
                 return {'status': True, 'message': "Регистрация прошла успешно"}
@@ -184,11 +201,13 @@ def get_forward_supervisor_controller(worker_number: str, author_number: str) ->
     trades_list = get_workers_number(worker_number)
     author_res = get_workers_number(author_number)
     author = author_res.json()
-    controller_res = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?controller=true")
+    controller_res = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?controller=true",
+                                  headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос{API_METHODS['workers_f']}?controller=true - {controller_res.status_code}")
     controller = controller_res.json()[0]
     supervisor_id = trades_list.json()['supervisor']
-    supervisor_res = requests.get(url=f"{API_BASE_URL}{API_METHODS['supervisors']}{supervisor_id}/")
+    supervisor_res = requests.get(url=f"{API_BASE_URL}{API_METHODS['supervisors']}{supervisor_id}/",
+                                  headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['supervisors']}{supervisor_id}/ - {supervisor_res.status_code}")
     supervisor = supervisor_res.json()
 
@@ -201,31 +220,36 @@ def get_forward_supervisor_controller(worker_number: str, author_number: str) ->
 
 
 def get_partner_worker_list(partner):
-    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['partner-worker_f']}?partner={partner}")
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['partner-worker_f']}?partner={partner}",
+                     headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['partner-worker_f']} - {r.status_code}")
     return r.json()
 
 
 def get_result_list(group):
-    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['result-data_f']}?group={group}")
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['result-data_f']}?group={group}",
+                     headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['result-data_f']} - {r.status_code}")
     return r.json()
 
 
 def get_partner_worker(contact_person_id):
-    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['partner-worker_f']}?id={contact_person_id}")
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['partner-worker_f']}?id={contact_person_id}",
+                     headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['partner-worker_f']} - с атрибутами id={contact_person_id}- {r.status_code}")
     return r.json()
 
 
 def get_result_detail(result_id):
-    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['result']}{result_id}/")
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['result']}{result_id}/",
+                     headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['result']} - с атрибутами {result_id} - {r.status_code}")
     return r.json()
 
 
 def get_result_data_detail(result_id):
-    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['result-data']}{result_id}/")
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['result-data']}{result_id}/",
+                     headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['result-data']} - с атрибутами {result_id} - {r.status_code}")
     return r.json()
 
@@ -233,9 +257,7 @@ def get_result_data_detail(result_id):
 def get_ready_result_task(result, chat_id):
 
     task = get_task_number(result['task_number']).json()
-
     worker_comment_id = post_add_comment(chat_id=chat_id, comment=result['worker_comment'], method="worker")
-
     if worker_comment_id:
         logger.info(f"Создан комментарий по id={worker_comment_id}")
         result_item = {
@@ -253,7 +275,8 @@ def get_ready_result_task(result, chat_id):
             logger.info(f"Контрольная дата установлена для результата {result_item} - {task['number']}")
             result_item["control_date"] = None
 
-        result_re = requests.post(url=f"{API_BASE_URL}{API_METHODS['result']}", data=result_item)
+        result_re = requests.post(url=f"{API_BASE_URL}{API_METHODS['result']}", data=result_item,
+                                  headers={'Authorization': f"Token {get_token()}"})
 
         if result_re.status_code == 201:
             logger.info(f"POST запрос {API_METHODS['result']} с data={result_item} - "
@@ -263,8 +286,8 @@ def get_ready_result_task(result, chat_id):
             task['status'] = "Выполнено",
             task['worker_comment'] = worker_comment_id
             task['result'] = result_id
-            add_ready_task = requests.put(url=f"{API_BASE_URL}{API_METHODS['tasks']}", data=task)
-
+            add_ready_task = requests.put(url=f"{API_BASE_URL}{API_METHODS['tasks']}", data=task,
+                                          headers={'Authorization': f"Token {get_token()}"})
             if add_ready_task.status_code == 201:
                 logger.info(f"PUT запрос {API_METHODS['tasks']} c data={task} - "
                             f"{add_ready_task.status_code}")
