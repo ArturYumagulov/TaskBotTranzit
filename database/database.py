@@ -184,7 +184,8 @@ def put_register(phone: str, chat_id: str):
             logger.info(f"Пользователю {worker} - назначен chat_id={chat_id}")
             data = json.dumps(worker)
             update = requests.put(url=f"{API_BASE_URL}workers/", data=data,
-                                  headers={'Authorization': f"Token {get_token()}"})
+                                  headers={'Authorization': f"Token {get_token()}",
+                                           "Content-Type": 'application/json'})
             if update.status_code == 201:
                 logger.info(f"PUT запрос workers/ - data={data} - {update.status_code}")
                 return {'status': True, 'message': "Регистрация прошла успешно"}
