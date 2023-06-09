@@ -6,6 +6,7 @@ from environs import Env
 env = Env()
 Env.read_env()
 
+
 @dataclass
 class TgBot:
     token: str            # Токен для доступа к телеграм-боту
@@ -28,10 +29,12 @@ DELETE_MESSAGE_TIMER = 7
 
 CONSTANT_COMMENT_ID = 1
 
-API_BASE_URL = "http://192.168.80.65/api/v1/"
-# API_BASE_URL = "http://127.0.0.1:8000/api/v1/"
+# API_BASE_URL = "http://192.168.80.89/api/v1/"
+API_BASE_URL = "http://127.0.0.1:8000/api/v1/"
 
-AUTH_DATA = {'username': env('BOT_USERNAME'), 'password': env('PASSWORD')}
+# AUTH_DATA = {'username': env('BOT_USERNAME'), 'password': env('PASSWORD')}
+
+API_TOKEN = env('API_TOKEN')
 
 API_METHODS = {
     'tasks': "tasks/",

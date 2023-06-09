@@ -35,7 +35,7 @@ async def process_register_command(message: Message, ):
 
 
 @router.message(Command(commands='tasks'))
-async def new_tasks_command(message: Message):
+async def all_tasks_command(message: Message):
 
     tasks_list = get_trades_tasks_list(message.from_user.id)
 
@@ -43,10 +43,22 @@ async def new_tasks_command(message: Message):
     if tasks_list['status']:
         if len(tasks_list['text']) > 0:
             for task in tasks_list['text']:
-                date = clear_date(task)
-                text = f"""
-                Задача от {date}\n\n"{task['name']}"\n\n<b>Автор:</b>\n{task['author']['name']}\n<b>Основание:</b>\n{task['base']['name']}\n<b>Комментарий автора:</b>\n{task['author_comment']['comment']}
-                """
+                date = clear_date(task['date'])
+                deadline = clear_date(task['deadline'])
+
+                text = f"Задача от " \
+                       f"{date}\n\n" \
+                       f"'{task['name']}'\n\n" \
+                       f"<b>Исполнить до:</b>\n" \
+                       f"{deadline}\n" \
+                       f"<b>Автор:</b>\n" \
+                       f"{task['author']['name']}\n" \
+                       f"<b>Контрагент:</b>\n" \
+                       f"{task['partner']['name']}\n" \
+                       f"<b>Основание:</b>\n" \
+                       f"{task['base']['name']}\n" \
+                       f"<b>Комментарий автора:</b>\n" \
+                       f"{task['author_comment']['comment']}"
 
                 await message.answer(
                         text=text,

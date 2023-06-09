@@ -55,7 +55,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DoneTaskForm.task_number)
     logger.info(f"Записаны данные в state {await state.get_data()}")
     task = get_task_detail(task_number)
-    date = clear_date(task)
+    date = clear_date(task['date'])
 
     text = f"""
          Укажите какое действие было сделано к задаче от {date}\n\n"{task['name']}"\n
@@ -100,7 +100,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     task = get_task_detail(task_number['task_number'])
     logger.info(f"Получены контактное лицо - {partner_worker[0]['name']} - к задаче {task['name']}")
     logger.info(f"Записаны данные в state {await state.get_data()}")
-    date = clear_date(task)
+    date = clear_date(task['date'])
 
     text = f"""
             Выберите результат действия к задаче {task['name']} от {date}\n\n

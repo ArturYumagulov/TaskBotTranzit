@@ -1,7 +1,7 @@
 import logging
 import json
 import requests
-from config_data.config import API_BASE_URL, API_METHODS, AUTH_DATA, CONSTANT_COMMENT_ID
+from config_data.config import API_BASE_URL, API_METHODS, CONSTANT_COMMENT_ID, API_TOKEN
 
 from config_data.config import CONSTANT_COMMENT_ID
 from services.utils import comparison
@@ -10,9 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 def get_token():
-    r = requests.post(url=f"{API_BASE_URL}{API_METHODS['auth']}", data={'username': AUTH_DATA['username'],
-                                                                        'password': AUTH_DATA['password']})
-    return r.json()['token']
+    # r = requests.post(url=f"{API_BASE_URL}{API_METHODS['auth']}", data={'username': AUTH_DATA['username'],
+    #                                                                     'password': AUTH_DATA['password']})
+    # logger.info(f"GET запрос {API_METHODS['auth']} - {r.status_code}")
+    # return r.json()['token']
+    return API_TOKEN
 
 
 def get_task_number(task_number):

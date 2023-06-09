@@ -19,9 +19,6 @@ LEXICON_COMMANDS: dict[str, str] = {
     '/tasks': 'Список новых задач',
     '/reset': 'Перезагрузить состояние',
 }
-LEXICON_ALL_TASKS: dict[str, str] = {
-}
-
 TYPES = {
     'email': "Электронное письмо",
     'phone': "Телефонный звонок",
@@ -29,4 +26,20 @@ TYPES = {
     'e-market': "Электронная торговая площадка",
     'postmail': "Почтовое письмо",
     'other': "Прочее"
+}
+
+TASK_KEYS: dict[str, str] = {
+        'done': {
+            'text': "Выполнена ✅",
+            'callback_data': "ok_"
+        },
+        'dont': {
+            'text': "Отклонена ❌",
+            'callback_data': "dont_"
+        },
+        'forward': {
+                'text': "Переадресовать ↪",
+                'callback_data': "first_forward_"
+            },
+        'get_phone': "Передать телефон"
 }

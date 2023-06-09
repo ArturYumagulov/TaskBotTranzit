@@ -1,6 +1,6 @@
 def clear_date(data):
     """Функция очистки даты от символов"""
-    return data['date'].replace("T", " ").replace("Z", "")
+    return data.replace("T", " ").replace("Z", "")
 
 
 def comparison(controller_list, supervisor_list, author_list):

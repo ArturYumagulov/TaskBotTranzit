@@ -50,7 +50,7 @@ async def process_dont_press(callback: CallbackQuery, state: FSMContext):
     task = get_task_detail(task_number)
     logger.info(f"Записаны данные в state {await state.get_data()} - {callback.from_user.id} - {callback.from_user.username}")
 
-    date = clear_date(task)
+    date = clear_date(task['date'])
 
     text = f"""
         Укажите комментарий к задаче от {date}\n\n"{task['name']}"\n

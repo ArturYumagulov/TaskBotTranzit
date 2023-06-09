@@ -32,12 +32,22 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
         f"Записаны данные в state {await state.get_data()} - {callback.from_user.id} - {callback.from_user.username}")
 
     task = get_task_detail(task_number)
-    date = clear_date(task)
+    date = clear_date(task['date'])
+    deadline = clear_date(task['deadline'])
 
-    text = f"""
-        Переадресовать задачу от {date}\n\n"{task['name']}"\n\n<b>Автор:</b> {task['author']['name']}
-        \n<b>Основание:</b> {task['base']['name']}
-    """
+    text = f"Переадресовать задачу от " \
+           f"{date}\n\n" \
+           f"'{task['name']}'\n\n" \
+           f"<b>Исполнить до:</b>\n" \
+           f"{deadline}\n" \
+           f"<b>Автор:</b>\n" \
+           f"{task['author']['name']}\n" \
+           f"<b>Контрагент:</b>\n" \
+           f"{task['partner']['name']}\n" \
+           f"<b>Основание:</b>\n" \
+           f"{task['base']['name']}\n" \
+           f"<b>Комментарий автора:</b>\n" \
+           f"{task['author_comment']['comment']}"
 
     trades_data = get_forward_supervisor_controller(task['worker']['code'], task['author']['code'])
 
@@ -64,7 +74,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     logger.info(f"Записаны данные {task} от {callback.message.from_user.id} - "
                 f"{callback.from_user.username}")
     task = get_task_detail(data['task_number'])
-    date = clear_date(task)
+    date = clear_date(task['date'])
 
     text = f"""
          Укажите комментарий к задаче от {date}\n\n"{task['name']}"\n

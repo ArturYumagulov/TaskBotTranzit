@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from lexicon.lexicon import TASK_KEYS
 
 
 def create_trades_register_inline_kb():
@@ -7,7 +8,7 @@ def create_trades_register_inline_kb():
     kb_builder: ReplyKeyboardBuilder = ReplyKeyboardBuilder()
 
     contact_btn: KeyboardButton = KeyboardButton(
-        text='Передать телефон',
+        text=TASK_KEYS['get_phone'],
         request_contact=True)
 
     kb_builder.add(contact_btn)
@@ -20,14 +21,14 @@ def create_trades_register_inline_kb():
 def create_new_tasks_inline_kb(task):
 
     done_button: InlineKeyboardButton = InlineKeyboardButton(
-        text="Выполнена ✅",
-        callback_data=f"ok_{task['number']}")
+        text=TASK_KEYS['done']['text'],
+        callback_data=f"{TASK_KEYS['done']['callback_data']}{task['number']}")
     not_done_button: InlineKeyboardButton = InlineKeyboardButton(
-        text="Отклонена ❌",
-        callback_data=f"dont_{task['number']}")
+        text=TASK_KEYS['dont']['text'],
+        callback_data=f"{TASK_KEYS['dont']['callback_data']}{task['number']}")
     forward_button: InlineKeyboardButton = InlineKeyboardButton(
-        text="Переадресовать ↪",
-        callback_data=f"first_forward_{task['number']}")
+        text=TASK_KEYS['forward']['text'],
+        callback_data=f"{TASK_KEYS['forward']['callback_data']}{task['number']}")
     keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
         inline_keyboard=[[done_button], [not_done_button], [forward_button]])
     return keyboard
