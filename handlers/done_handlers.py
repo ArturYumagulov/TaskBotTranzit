@@ -106,7 +106,9 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
             Выберите результат действия к задаче {task['name']} от {date}\n\n
             """
 
-    await callback.message.answer(text=text, reply_markup=create_result_types_done_inline_kb(1, get_result_list(1)))
+    await callback.message.answer(
+        text=text,
+        reply_markup=create_result_types_done_inline_kb(1, get_result_list(task['base']['group'])))
     await asyncio.sleep(DELETE_MESSAGE_TIMER)
     await callback.message.delete()
     logger.info(f"Сообщение_person по задаче {task_number['task_number']} удалено")

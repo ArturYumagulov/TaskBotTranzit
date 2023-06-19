@@ -42,9 +42,11 @@ def create_trades_forward_inline_kb(width: int, lst: list) -> InlineKeyboardMark
 
     if lst:
         for button in range(len(lst)):
-            buttons.append(InlineKeyboardButton(
-                text=lst[button]['name'],
-                callback_data=f"second_forward_{lst[button]['code']}"))
+            print(lst[button])
+            if lst[button] is not None:
+                buttons.append(InlineKeyboardButton(
+                    text=lst[button]['name'],
+                    callback_data=f"second_forward_{lst[button]['code']}"))
 
     kb_builder.row(*buttons, width=width)
     return kb_builder.as_markup()
@@ -74,9 +76,10 @@ def create_result_types_done_inline_kb(width: int, dct: dict) -> InlineKeyboardM
 
     if dct:
         for button in dct:
+            print(button)
             buttons.append(InlineKeyboardButton(
                 text=button['name'],
-                callback_data=f"result_{button['id']}"))
+                callback_data=f"result_{button['code']}"))
 
     kb_builder.row(*buttons, width=width)
     return kb_builder.as_markup()
