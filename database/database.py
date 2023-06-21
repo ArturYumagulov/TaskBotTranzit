@@ -269,7 +269,6 @@ def get_ready_result_task(result, chat_id):
             "result": result['result'],
             "contact_person": result['contact_person'],
             "base": task['base'],
-            "group": 1,
             "task_number": result['task_number']
         }
         if result.get('control_date'):

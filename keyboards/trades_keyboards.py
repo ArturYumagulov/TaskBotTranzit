@@ -75,7 +75,6 @@ def create_result_types_done_inline_kb(width: int, dct: dict) -> InlineKeyboardM
 
     if dct:
         for button in dct:
-            print(button)
             buttons.append(InlineKeyboardButton(
                 text=button['name'],
                 callback_data=f"result_{button['code']}"))
