@@ -95,7 +95,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
 async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     person_id = callback.data.split('_')[1]
     partner_worker = get_partner_worker(person_id)
-    await state.update_data(contact_person=partner_worker[0]['name'])
+    await state.update_data(contact_person=partner_worker[0]['code'])
     task_number = await state.get_data()
     task = get_task_detail(task_number['task_number'])
     logger.info(f"Получены контактное лицо - {partner_worker[0]['name']} - к задаче {task['name']}")
