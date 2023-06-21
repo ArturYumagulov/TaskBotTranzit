@@ -27,10 +27,10 @@ def load_config(path: str | None = None) -> Config:
 
 DELETE_MESSAGE_TIMER = 7
 
-CONSTANT_COMMENT_ID = 1
+CONSTANT_COMMENT_ID = 5
 
-# API_BASE_URL = "http://192.168.80.89/api/v1/"
-API_BASE_URL = "http://127.0.0.1:8000/api/v1/"
+API_BASE_URL = "http://192.168.80.89/api/v1/"
+# API_BASE_URL = "http://127.0.0.1:8000/api/v1/"
 
 # AUTH_DATA = {'username': env('BOT_USERNAME'), 'password': env('PASSWORD')}
 

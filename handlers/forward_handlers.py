@@ -63,7 +63,6 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(Text(startswith='second_forward'), StateFilter(default_state))
 async def process_forward_press(callback: CallbackQuery, state: FSMContext):
-
     author_number = callback.data.split("_")[2]
     await state.update_data(next_user_id=author_number)
     task = await state.get_data()

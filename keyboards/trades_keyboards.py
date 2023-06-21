@@ -42,7 +42,6 @@ def create_trades_forward_inline_kb(width: int, lst: list) -> InlineKeyboardMark
 
     if lst:
         for button in range(len(lst)):
-            print(lst[button])
             if lst[button] is not None:
                 buttons.append(InlineKeyboardButton(
                     text=lst[button]['name'],

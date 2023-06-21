@@ -203,7 +203,6 @@ def get_forward_supervisor_controller(worker_number: str, author_number: str) ->
 
     trades_list = get_workers_number(worker_number)
     author_res = get_workers_number(author_number)
-
     author = author_res.json()
     controller_res = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?controller=true",
                                   headers={'Authorization': f"Token {get_token()}"})
@@ -214,12 +213,10 @@ def get_forward_supervisor_controller(worker_number: str, author_number: str) ->
                                   headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['supervisors']}{supervisor_id}/ - {supervisor_res.status_code}")
     supervisor = supervisor_res.json()
+    worker_partner = get_workers_number(trades_list.json()['partner']).json()
 
-    result_list = comparison(author_list=author, controller_list=controller, supervisor_list=supervisor)
-    if trades_list.json()['partner']:
-        worker_partner = get_workers_number(trades_list.json()['partner'])
-        result_list.append(worker_partner.json())
-    print(result_list)
+    result_list = comparison(author_list=author, controller_list=controller, supervisor_list=supervisor,
+                             worker_list=trades_list.json(), partner_list=worker_partner)
     if trades_list.status_code == 200:
         return {'status': True, 'result': result_list}
     else:
