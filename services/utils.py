@@ -1,3 +1,6 @@
+from config_data import config
+
+
 def clear_date(data):
     """Функция очистки даты от символов"""
     return data.replace("T", " ").replace("Z", "")
@@ -14,7 +17,7 @@ def comparison(controller_list, supervisor_list, author_list, worker_list, partn
             result_list.append(supervisor_list)
             result_list.append(author_list)
             result_list.append(partner_list)
-        elif author_list['code'] == "SoftCollect":
+        elif author_list['code'] == config.SOFT_COLLECTION_USER_CODE:
             result_list.append(supervisor_list)
             result_list.append(controller_list)
         elif author_list['code'] == supervisor_list['code'] and supervisor_list['code'] != partner_list['code']:
@@ -45,7 +48,7 @@ def comparison(controller_list, supervisor_list, author_list, worker_list, partn
         if author_list['controller']:
             result_list.append(supervisor_list)
             result_list.append(author_list)
-        elif author_list['code'] == "SoftCollect":
+        elif author_list['code'] == config.SOFT_COLLECTION_USER_CODE:
             result_list.append(supervisor_list)
             result_list.append(controller_list)
         elif author_list['code'] == supervisor_list['code']:
