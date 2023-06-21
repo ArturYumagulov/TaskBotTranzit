@@ -14,6 +14,9 @@ def comparison(controller_list, supervisor_list, author_list, worker_list, partn
             result_list.append(supervisor_list)
             result_list.append(author_list)
             result_list.append(partner_list)
+        elif author_list['code'] == "SoftCollect":
+            result_list.append(supervisor_list)
+            result_list.append(controller_list)
         elif author_list['code'] == supervisor_list['code'] and supervisor_list['code'] != partner_list['code']:
             result_list.append(controller_list)
             result_list.append(author_list)
@@ -42,6 +45,9 @@ def comparison(controller_list, supervisor_list, author_list, worker_list, partn
         if author_list['controller']:
             result_list.append(supervisor_list)
             result_list.append(author_list)
+        elif author_list['code'] == "SoftCollect":
+            result_list.append(supervisor_list)
+            result_list.append(controller_list)
         elif author_list['code'] == supervisor_list['code']:
             result_list.append(controller_list)
             result_list.append(author_list)
