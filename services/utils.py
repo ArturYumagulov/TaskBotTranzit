@@ -10,17 +10,17 @@ def comparison(controller_list, supervisor_list, author_list, worker_list, partn
     """Функция сравнения, для вывода нужных адресатов для переадресации задачи"""
 
     result_list = []
-
     if partner_list is not None:
         if author_list['controller'] and partner_list['code'] != supervisor_list['code']:
-
             result_list.append(supervisor_list)
             result_list.append(author_list)
             result_list.append(partner_list)
         elif author_list['code'] == config.SOFT_COLLECTION_USER_CODE:
             result_list.append(supervisor_list)
             result_list.append(controller_list)
-        elif author_list['code'] == supervisor_list['code'] and supervisor_list['code'] != partner_list['code']:
+            result_list.append(partner_list)
+        elif author_list['code'] == supervisor_list['code'] and supervisor_list['code'] != partner_list['code'] \
+                and partner_list['code'] is not None:
             result_list.append(controller_list)
             result_list.append(author_list)
             result_list.append(partner_list)
@@ -67,13 +67,15 @@ def comparison(controller_list, supervisor_list, author_list, worker_list, partn
 
 if __name__ == '__main__':
     author = {'list': 'author', 'code': "A", 'controller': False}
+    worker = {'list': 'worker', 'code': "W", 'controller': False}
     controller = {'list': 'controller', 'code': 'C', 'controller': True}
     supervisor = {'list': 'supervisor', 'code': "A", 'controller': False}
-    partner = {'list': 'partner', 'code': "A", 'controller': False}
+    partner = {'list': 'partner', 'code': 'P', 'controller': False}
 
     print(comparison(
         controller_list=controller,
         author_list=author,
         supervisor_list=supervisor,
-        partner_list=partner
+        partner_list=partner,
+        worker_list=worker
     ))
