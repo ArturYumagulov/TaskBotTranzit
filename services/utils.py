@@ -19,8 +19,7 @@ def comparison(controller_list, supervisor_list, author_list, worker_list, partn
             result_list.append(supervisor_list)
             result_list.append(controller_list)
             result_list.append(partner_list)
-        elif author_list['code'] == supervisor_list['code'] and supervisor_list['code'] != partner_list['code'] \
-                and partner_list['code'] is not None:
+        elif author_list['code'] == supervisor_list['code'] and supervisor_list['code'] != partner_list['code']:
             result_list.append(controller_list)
             result_list.append(author_list)
             result_list.append(partner_list)
@@ -66,11 +65,11 @@ def comparison(controller_list, supervisor_list, author_list, worker_list, partn
 
 
 if __name__ == '__main__':
-    author = {'list': 'author', 'code': "A", 'controller': False}
+    author = {'list': 'author', 'code': "SoftCollect", 'controller': False}
     worker = {'list': 'worker', 'code': "W", 'controller': False}
     controller = {'list': 'controller', 'code': 'C', 'controller': True}
-    supervisor = {'list': 'supervisor', 'code': "A", 'controller': False}
-    partner = {'list': 'partner', 'code': 'P', 'controller': False}
+    supervisor = {'list': 'supervisor', 'code': "S", 'controller': False}
+    partner = {'list': 'partner', 'code': "P", 'controller': False}
 
     print(comparison(
         controller_list=controller,
