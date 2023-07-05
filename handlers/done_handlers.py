@@ -159,7 +159,9 @@ async def process_simple_calendar(callback: CallbackQuery, callback_data: dict, 
         await state.update_data(control_date=date)
         task = await state.get_data()
         tasks_data = get_task_detail(task['task_number'])
-        await callback.message.answer(text=f"Укажите комментарий к задаче {tasks_data['name']}")
+        await callback.message.answer(
+            text=f"Укажите комментарий к задаче {tasks_data['name']}\n ⬇️⬇️⬇️"
+        )
         await state.set_state(DoneTaskForm.worker_comment)
         await asyncio.sleep(DELETE_MESSAGE_TIMER)
         await callback.message.delete()

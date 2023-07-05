@@ -76,7 +76,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     date = clear_date(task['date'])
 
     text = f"""
-         Укажите комментарий к задаче от {date}\n\n"{task['name']}"\n
+         Укажите комментарий к задаче от {date}\n\n"{task['name']}"\n ⬇️⬇️⬇️
      """
     await callback.message.answer(text=text)
     await state.set_state(ForwardTaskForm.comment)

@@ -53,7 +53,7 @@ async def process_dont_press(callback: CallbackQuery, state: FSMContext):
     date = clear_date(task['date'])
 
     text = f"""
-        Укажите комментарий к задаче от {date}\n\n"{task['name']}"\n
+        Укажите <b>комментарий</b> к задаче от {date}\n\n"{task['name']}"\n\n ⬇️⬇️⬇️
     """
     await callback.message.answer(text=text)
     await state.set_state(Form.comment)
