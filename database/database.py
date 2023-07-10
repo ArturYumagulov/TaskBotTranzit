@@ -233,7 +233,7 @@ def get_partner_worker_list(partner):
 def get_result_list(group):
     r = requests.get(url=f"{API_BASE_URL}{API_METHODS['result-data_f']}?group={group}",
                      headers={'Authorization': f"Token {get_token()}"})
-    logger.info(f"GET запрос {API_METHODS['result-data_f']} - {r.status_code}")
+    logger.info(f"GET запрос {API_METHODS['result-data_f']}  - 'group='{group} - {r.status_code}")
     return r.json()
 
 
