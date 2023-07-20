@@ -25,9 +25,10 @@ def get_task_number(task_number):
 
 
 def get_workers_number(worker_number):
-    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers']}{worker_number}",
+    r = requests.get(url=f"{API_BASE_URL}{API_METHODS['worker_detail']}{worker_number}",
                      headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['workers']}{worker_number} - {r.status_code}")
+    print(r)
     return r
 
 
@@ -203,18 +204,17 @@ def get_forward_supervisor_controller(worker_number: str, author_number: str) ->
 
     trades_list = get_workers_number(worker_number)
     author_res = get_workers_number(author_number)
-    author = author_res.json()
+    author = author_res.json()[0]
     controller_res = requests.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?controller=true",
                                   headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос{API_METHODS['workers_f']}?controller=true - {controller_res.status_code}")
     controller = controller_res.json()[0]
-    supervisor_id = trades_list.json()['supervisor']
+    supervisor_id = trades_list.json()[0]['supervisor_id']
     supervisor_res = requests.get(url=f"{API_BASE_URL}{API_METHODS['supervisors']}{supervisor_id}/",
                                   headers={'Authorization': f"Token {get_token()}"})
     logger.info(f"GET запрос {API_METHODS['supervisors']}{supervisor_id}/ - {supervisor_res.status_code}")
     supervisor = supervisor_res.json()
-    worker_partner = get_workers_number(trades_list.json()['partner']).json()
-
+    worker_partner = get_workers_number(trades_list.json()[0]['partner']).json()[0]
     result_list = comparison(author_list=author, controller_list=controller, supervisor_list=supervisor,
                              worker_list=trades_list.json(), partner_list=worker_partner)
     if trades_list.status_code == 200:

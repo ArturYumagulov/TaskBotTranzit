@@ -31,8 +31,8 @@ CONSTANT_COMMENT_ID = 5
 
 SOFT_COLLECTION_USER_CODE = "SoftCollect"
 
-API_BASE_URL = "http://192.168.80.89/api/v1/"
-# API_BASE_URL = "http://127.0.0.1:8000/api/v1/"
+# API_BASE_URL = "http://192.168.80.89/api/v1/"
+API_BASE_URL = "http://127.0.0.1:8000/api/v1/"
 
 # AUTH_DATA = {'username': env('BOT_USERNAME'), 'password': env('PASSWORD')}
 
@@ -47,7 +47,9 @@ API_METHODS = {
     'result': 'result/',
     'result-data': 'result-data/',
     'supervisors': 'supervisors/',
-    'auth': 'token-auth/'
+    'auth': 'token-auth/',
+    'worker_detail': 'worker_detail/',
+    'supervisor_detail': 'supervisor_detail/'
 }
 
 LOGGING_CONFIG = {
