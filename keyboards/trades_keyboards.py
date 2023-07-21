@@ -39,7 +39,6 @@ def create_trades_forward_inline_kb(width: int, lst: list) -> InlineKeyboardMark
     kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
 
     buttons: list[InlineKeyboardButton] = []
-
     if lst:
         for button in range(len(lst)):
             if lst[button] is not None:
