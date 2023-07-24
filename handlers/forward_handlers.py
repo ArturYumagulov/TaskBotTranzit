@@ -110,5 +110,6 @@ async def add_forward_comment(message: Message, state: FSMContext):
 @router.message(Command(commands='reset'))
 async def send_echo(message: Message, state: FSMContext):
     await state.clear()
+    await message.answer(f"Система перезагружена")
     logger.info(f"Состояние очищено {message.from_user.id}")
 

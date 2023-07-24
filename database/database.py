@@ -216,6 +216,7 @@ def get_forward_supervisor_controller(worker_number: str, author_number: str) ->
     worker_partner = get_workers_number(trades_list.json()[0]['partner']).json()[0]
     result_list = comparison(author_list=author, controller_list=controller, supervisor_list=supervisor,
                              worker_list=trades_list.json(), partner_list=worker_partner)
+    logger.info(f"Создан лист переадресаций {result_list}")
     if trades_list.status_code == 200:
         return {'status': True, 'result': result_list}
     else:
