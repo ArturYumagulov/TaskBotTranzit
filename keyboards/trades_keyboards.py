@@ -23,14 +23,14 @@ def create_new_tasks_inline_kb(task):
     done_button: InlineKeyboardButton = InlineKeyboardButton(
         text=TASK_KEYS['done']['text'],
         callback_data=f"{TASK_KEYS['done']['callback_data']}{task['number']}")
-    not_done_button: InlineKeyboardButton = InlineKeyboardButton(
-        text=TASK_KEYS['dont']['text'],
-        callback_data=f"{TASK_KEYS['dont']['callback_data']}{task['number']}")
+    # not_done_button: InlineKeyboardButton = InlineKeyboardButton(
+    #     text=TASK_KEYS['dont']['text'],
+    #     callback_data=f"{TASK_KEYS['dont']['callback_data']}{task['number']}")
     forward_button: InlineKeyboardButton = InlineKeyboardButton(
         text=TASK_KEYS['forward']['text'],
         callback_data=f"{TASK_KEYS['forward']['callback_data']}{task['number']}")
     keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
-        inline_keyboard=[[done_button], [not_done_button], [forward_button]])
+        inline_keyboard=[[done_button], [forward_button]])  # [not_done_button][1]
     return keyboard
 
 
