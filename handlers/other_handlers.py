@@ -37,7 +37,7 @@ async def process_register_command(message: Message, ):
 @router.message(Command(commands='tasks'))
 async def all_tasks_command(message: Message):
 
-    tasks_list = get_trades_tasks_list(message.from_user.id)
+    tasks_list = await get_trades_tasks_list(message.from_user.id)
 
     logger.info(f"Поступила команда tasks - {message.from_user.id} - {message.from_user.username}")
     if tasks_list['status']:
@@ -75,7 +75,7 @@ async def get_contact(message: ContentType.CONTACT):
     phone = message.contact.phone_number
     chat_id = message.contact.user_id
     message.delete()
-    response = put_register(phone=phone, chat_id=chat_id)
+    response = await put_register(phone=phone, chat_id=chat_id)
     logger.info(f"Передан номер телефона - {phone} - {message.from_user.id} - {message.from_user.username}")
     if response['status']:
         return await message.reply(text=response['message'], reply_markup=ReplyKeyboardRemove())

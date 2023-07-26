@@ -31,7 +31,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     logger.info(
         f"Записаны данные в state {await state.get_data()} - {callback.from_user.id} - {callback.from_user.username}")
 
-    task = get_task_detail(task_number)
+    task = await get_task_detail(task_number)
     date = clear_date(task['date'])
     deadline = clear_date(task['deadline'])
 
@@ -49,7 +49,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
            f"<b>Комментарий автора:</b>\n" \
            f"{task['author_comment']['comment']}"
 
-    trades_data = get_forward_supervisor_controller(task['worker']['code'], task['author']['code'])
+    trades_data = await get_forward_supervisor_controller(task['worker']['code'], task['author']['code'])
     if trades_data['status']:
         await callback.message.edit_text(
             text=text,
@@ -71,7 +71,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     logger.info(f"Записаны данные {task} от {callback.message.from_user.id} - "
                 f"{callback.from_user.username}")
-    task = get_task_detail(data['task_number'])
+    task = await get_task_detail(data['task_number'])
     date = clear_date(task['date'])
 
     text = f"""
@@ -83,7 +83,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
 
 @router.message(StateFilter(ForwardTaskForm.comment))
 async def add_forward_comment(message: Message, state: FSMContext):
-    comment_id = post_add_comment(chat_id=message.chat.id, comment=message.text, method='author')
+    comment_id = await post_add_comment(chat_id=message.chat.id, comment=message.text, method='author')
     await state.update_data(comment=message.text)
     await state.update_data(comment_id=comment_id)
     data = await state.get_data()
@@ -91,9 +91,9 @@ async def add_forward_comment(message: Message, state: FSMContext):
                 f"{message.from_user.id} - {message.from_user.username}")
     logger.info(f"Записаны в state данные {data} к задаче {data['task_number']} - "
                 f"{message.from_user.id} - {message.from_user.username}")
-    task = get_task_detail(data['task_number'])
-    if post_forward_task(number=data['task_number'], comment_id=data['comment_id'], new_worker=data['next_user_id'],
-                         author=message.from_user.id):
+    task = await get_task_detail(data['task_number'])
+    if await post_forward_task(number=data['task_number'], comment_id=data['comment_id'], new_worker=data['next_user_id'],
+                               author=message.from_user.id):
         await state.clear()
         logger.info(f"Очищены в state данные к задаче {data['task_number']} - "
                     f"{message.from_user.id} - {message.from_user.username}")

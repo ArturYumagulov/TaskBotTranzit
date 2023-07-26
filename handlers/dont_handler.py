@@ -21,7 +21,7 @@ router: Router = Router()
 
 @router.message(StateFilter(Form.comment))
 async def add_dont_comment(message: Message, state: FSMContext):
-    comment_id = post_add_comment(chat_id=message.chat.id, comment=message.text, method='worker')
+    comment_id = await post_add_comment(chat_id=message.chat.id, comment=message.text, method='worker')
     await state.update_data(comment=message.text)
     await state.update_data(comment_id=comment_id)
     task = await state.get_data()
@@ -30,7 +30,7 @@ async def add_dont_comment(message: Message, state: FSMContext):
     logger.info(f"Комментарий к задаче {task['task']} - {message.from_user.id} - "
                 f"{message.from_user.username}")
     data = await state.get_data()
-    res = post_dont_task(number=data['task'], comment_id=data['comment_id'])
+    res = await post_dont_task(number=data['task'], comment_id=data['comment_id'])
     if res['status']:
         await state.clear()
         await message.answer(f"Задача №{data['task']} отклонена")
@@ -45,10 +45,12 @@ async def add_dont_comment(message: Message, state: FSMContext):
 @router.callback_query(Text(startswith='dont'), StateFilter(default_state))
 async def process_dont_press(callback: CallbackQuery, state: FSMContext):
     task_number = callback.data.split("_")[1]
-    logger.info(f"Получен отрицательный ответ к задаче {task_number} для {callback.from_user.id} - {callback.from_user.username}")
+    logger.info(f"Получен отрицательный ответ к задаче {task_number} для {callback.from_user.id} - "
+                f"{callback.from_user.username}")
     await state.update_data(task=task_number)
-    task = get_task_detail(task_number)
-    logger.info(f"Записаны данные в state {await state.get_data()} - {callback.from_user.id} - {callback.from_user.username}")
+    task = await get_task_detail(task_number)
+    logger.info(f"Записаны данные в state {await state.get_data()} - {callback.from_user.id} - "
+                f"{callback.from_user.username}")
 
     date = clear_date(task['date'])
 

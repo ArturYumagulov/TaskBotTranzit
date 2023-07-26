@@ -33,7 +33,7 @@ async def add_ok_task_comment(message: Message, state: FSMContext):
     logger.info(f"Комментарий к задаче {task['task_number']} - {message.from_user.id} - "
                 f"{message.from_user.username}")
     task_data = await state.get_data()
-    res = get_ready_result_task(task_data, message.from_user.id)
+    res = await get_ready_result_task(task_data, message.from_user.id)
     if res['status']:
         logger.info(f"{res['text']}- {message.from_user.id} - {message.from_user.username}")
     else:
@@ -54,7 +54,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     await state.update_data(task_number=task_number)
     await state.set_state(DoneTaskForm.task_number)
     logger.info(f"Записаны данные в state {await state.get_data()}")
-    task = get_task_detail(task_number)
+    task = await get_task_detail(task_number)
     date = clear_date(task['date'])
 
     text = f"""
@@ -77,14 +77,14 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     task_number = await state.get_data()
     logger.info(f"Получены тип контакта - {task_type} - к задаче {task_number['task_number']}")
     logger.info(f"Записаны данные в state {await state.get_data()}")
-    task = get_task_detail(task_number['task_number'])
+    task = await get_task_detail(task_number['task_number'])
 
     text = f"""
             Выберите контактное лицо\n\n
             """
 
     await callback.message.answer(text=text,
-                                  reply_markup=create_contact_person_done_inline_kb(1, get_partner_worker_list(
+                                  reply_markup=create_contact_person_done_inline_kb(1, await get_partner_worker_list(
                                       task['partner']['code'])))
     await asyncio.sleep(DELETE_MESSAGE_TIMER)
     await callback.message.delete()
@@ -94,10 +94,10 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(Text(startswith="person"))
 async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     person_id = callback.data.split('_')[1]
-    partner_worker = get_partner_worker(person_id)
+    partner_worker = await get_partner_worker(person_id)
     await state.update_data(contact_person=partner_worker[0]['code'])
     task_number = await state.get_data()
-    task = get_task_detail(task_number['task_number'])
+    task = await get_task_detail(task_number['task_number'])
     logger.info(f"Получены контактное лицо - {partner_worker[0]['name']} - к задаче {task['name']}")
     logger.info(f"Записаны данные в state {await state.get_data()}")
     date = clear_date(task['date'])
@@ -108,7 +108,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
 
     await callback.message.answer(
         text=text,
-        reply_markup=create_result_types_done_inline_kb(1, get_result_list(task['base']['group'])))
+        reply_markup=create_result_types_done_inline_kb(1, await get_result_list(task['base']['group'])))
     await asyncio.sleep(DELETE_MESSAGE_TIMER)
     await callback.message.delete()
     logger.info(f"Сообщение_person по задаче {task_number['task_number']} удалено")
@@ -117,10 +117,10 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(Text(startswith="result"))
 async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     result_id = callback.data.split('_')[1]
-    result_data = get_result_data_detail(result_id)
+    result_data = await get_result_data_detail(result_id)
     await state.update_data(result=result_data['name'])
     task = await state.get_data()
-    tasks_data = get_task_detail(task['task_number'])
+    tasks_data = await get_task_detail(task['task_number'])
     logger.info(f"Получен результат - {result_data['name']} - к задаче {task['task_number']} - "
                 f"{callback.message.from_user.id} - "
                 f"{callback.message.from_user.username}")
@@ -158,7 +158,7 @@ async def process_simple_calendar(callback: CallbackQuery, callback_data: dict, 
     if selected:
         await state.update_data(control_date=date)
         task = await state.get_data()
-        tasks_data = get_task_detail(task['task_number'])
+        tasks_data = await get_task_detail(task['task_number'])
         await callback.message.answer(
             text=f"Укажите комментарий к задаче {tasks_data['name']}\n ⬇️⬇️⬇️"
         )
