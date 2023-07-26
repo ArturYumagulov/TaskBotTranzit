@@ -236,7 +236,7 @@ async def get_forward_supervisor_controller(worker_number: str, author_number: s
     supervisor = supervisor_res.json()[0]
     worker_partner = await get_workers_number(trades_list.json()[0]['partner'])
     result_list = comparison(author_list=author, controller_list=controller, supervisor_list=supervisor,
-                             worker_list=trades_list.json(), partner_list=worker_partner.json()[0])
+                             worker_list=trades_list.json()[0], partner_list=worker_partner.json()[0])
     logger.info(f"Создан лист переадресаций {result_list}")
     if trades_list.status_code == 200:
         return {'status': True, 'result': result_list}
