@@ -218,7 +218,7 @@ async def get_forward_supervisor_controller(worker_number: str, author_number: s
 
     trades_list = await get_workers_number(worker_number)
     author_res = await get_workers_number(author_number)
-    author = author_res.json()[0]
+    author = author_res.json()
 
     async with httpx.AsyncClient() as async_requests:
         controller_res = await async_requests.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?controller=true",
@@ -226,17 +226,19 @@ async def get_forward_supervisor_controller(worker_number: str, author_number: s
 
     logger.info(f"GET запрос{API_METHODS['workers_f']}?controller=true - {controller_res.status_code}")
     controller = controller_res.json()[0]
-    supervisor_id = trades_list.json()[0]['supervisor_id']
+
+    supervisor_id = trades_list.json()['supervisor_id']
 
     async with httpx.AsyncClient() as async_requests:
         supervisor_res = await async_requests.get(url=f"{API_BASE_URL}{API_METHODS['supervisor_detail']}{supervisor_id}/",
                                                   headers={'Authorization': f"Token {get_token()}"})
 
     logger.info(f"GET запрос {API_METHODS['supervisor_detail']}{supervisor_id}/ - {supervisor_res.status_code}")
-    supervisor = supervisor_res.json()[0]
-    worker_partner = await get_workers_number(trades_list.json()[0]['partner'])
+    print(supervisor_res.json())
+    supervisor = supervisor_res.json()
+    worker_partner = await get_workers_number(trades_list.json()['partner'])
     result_list = comparison(author_list=author, controller_list=controller, supervisor_list=supervisor,
-                             worker_list=trades_list.json()[0], partner_list=worker_partner.json()[0])
+                             worker_list=trades_list.json(), partner_list=worker_partner.json())
     logger.info(f"Создан лист переадресаций {result_list}")
     if trades_list.status_code == 200:
         return {'status': True, 'result': result_list}
