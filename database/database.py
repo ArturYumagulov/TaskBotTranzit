@@ -227,14 +227,13 @@ async def get_forward_supervisor_controller(worker_number: str, author_number: s
     logger.info(f"GET запрос{API_METHODS['workers_f']}?controller=true - {controller_res.status_code}")
     controller = controller_res.json()[0]
 
-    supervisor_id = trades_list.json()['supervisor_id']
+    supervisor_id = trades_list.json()['supervisor']
 
     async with httpx.AsyncClient() as async_requests:
         supervisor_res = await async_requests.get(url=f"{API_BASE_URL}{API_METHODS['supervisor_detail']}{supervisor_id}/",
                                                   headers={'Authorization': f"Token {get_token()}"})
 
     logger.info(f"GET запрос {API_METHODS['supervisor_detail']}{supervisor_id}/ - {supervisor_res.status_code}")
-    print(supervisor_res.json())
     supervisor = supervisor_res.json()
     worker_partner = await get_workers_number(trades_list.json()['partner'])
     result_list = comparison(author_list=author, controller_list=controller, supervisor_list=supervisor,
