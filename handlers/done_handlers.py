@@ -29,6 +29,7 @@ async def add_ok_task_comment(message: Message, state: FSMContext):
     """Добавление комментария к выполненной задаче"""
 
     await state.update_data(worker_comment=message.text)
+    await message.delete()
     task = await state.get_data()
     logger.info(f"Комментарий к задаче {task['task_number']} - {message.from_user.id} - "
                 f"{message.from_user.username}")
@@ -61,9 +62,8 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
          Укажите какое действие было сделано к задаче от {date}\n\n"{task['name']}"\n
      """
     await callback.message.answer(text=text, reply_markup=create_types_done_inline_kb(1, lexicon.TYPES))
-    logger.info(f"Создана клавиатура c 'contacts'")
-    await asyncio.sleep(DELETE_MESSAGE_TIMER)
     await callback.message.delete()
+    logger.info(f"Создана клавиатура c 'contacts'")
     logger.info(f"Сообщение_ok по задаче {task['name']} удалено")
 
 
@@ -144,9 +144,8 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
 
     else:
         await callback.message.answer(text=f"Укажите комментарий к задаче {tasks_data['name']}")
-        await state.set_state(DoneTaskForm.worker_comment)
-        await asyncio.sleep(DELETE_MESSAGE_TIMER)
         await callback.message.delete()
+        await state.set_state(DoneTaskForm.worker_comment)
         logger.info(f"Сообщение_result по задаче {task['task_number']} удалено")
 
 

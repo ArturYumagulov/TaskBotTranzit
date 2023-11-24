@@ -41,5 +41,6 @@ TASK_KEYS: dict[str, str] = {
                 'text': "Переадресовать ↪",
                 'callback_data': "first_forward_"
             },
-        'get_phone': "Передать телефон"
+        'get_phone': "Передать телефон",
+        'census': "Сенсус"
 }

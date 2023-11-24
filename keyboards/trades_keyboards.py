@@ -34,6 +34,22 @@ def create_new_tasks_inline_kb(task):
     return keyboard
 
 
+def create_new_tasks_inline_kb_census(task):  # Клавиатура, только переадресация
+    url = task['author_comment']['comment'].split('_')[1]
+
+    census_button: InlineKeyboardButton = InlineKeyboardButton(
+        text=TASK_KEYS['census'],
+        url=url,
+    )
+    forward_button: InlineKeyboardButton = InlineKeyboardButton(
+        text=TASK_KEYS['forward']['text'],
+        callback_data=f"{TASK_KEYS['forward']['callback_data']}{task['number']}",
+    )
+    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
+        inline_keyboard=[[census_button], [forward_button]])  # [not_done_button][1], [done_button]
+    return keyboard
+
+
 def create_trades_forward_inline_kb(width: int, lst: list) -> InlineKeyboardMarkup:
 
     kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()

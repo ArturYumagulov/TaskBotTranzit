@@ -22,7 +22,6 @@ router: Router = Router()
 @router.callback_query(Text(startswith='first_forward'), StateFilter(default_state))
 async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     task_number = callback.data.split("_")[2]
-
     logger.info(f"Получен ответ на переадресацию задачи {task_number} от {callback.message.from_user.id} - "
                 f"{callback.from_user.username}")
 
@@ -34,6 +33,10 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     task = await get_task_detail(task_number)
     date = clear_date(task['date'])
     deadline = clear_date(task['deadline'])
+    author_comment = task['author_comment']['comment']
+
+    if task['base']['group'] == '000000001':
+        author_comment = author_comment.split('_')[0]
 
     text = f"Переадресовать задачу от " \
            f"{date}\n\n" \
@@ -47,7 +50,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
            f"<b>Основание:</b>\n" \
            f"{task['base']['name']}\n" \
            f"<b>Комментарий автора:</b>\n" \
-           f"{task['author_comment']['comment']}"
+           f"{author_comment}"
 
     trades_data = await get_forward_supervisor_controller(task['worker']['code'], task['author']['code'])
     if trades_data['status']:

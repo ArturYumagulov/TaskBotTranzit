@@ -1,7 +1,6 @@
 import logging
 import json
 import asyncio
-# import requests
 import httpx
 from config_data.config import API_BASE_URL, API_METHODS, CONSTANT_COMMENT_ID, API_TOKEN
 from services.utils import comparison
@@ -226,7 +225,6 @@ async def get_forward_supervisor_controller(worker_number: str, author_number: s
 
     logger.info(f"GET запрос{API_METHODS['workers_f']}?controller=true - {controller_res.status_code}")
     controller = controller_res.json()[0]
-
     supervisor_id = trades_list.json()['supervisor']
 
     async with httpx.AsyncClient() as async_requests:
