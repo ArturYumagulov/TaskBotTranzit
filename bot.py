@@ -26,7 +26,7 @@ async def main():
     await set_main_menu(bot)
 
     dp.include_router(done_handlers.router)
-    dp.include_router(dont_handler.router)
+    # dp.include_router(dont_handler.router)
     dp.include_router(forward_handlers.router)
     dp.include_router(other_handlers.router)
 

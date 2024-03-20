@@ -4,6 +4,7 @@ import asyncio
 import httpx
 from config_data.config import API_BASE_URL, API_METHODS, CONSTANT_COMMENT_ID, API_TOKEN
 from services.utils import comparison
+from services.redis_data import save_to_redis, get_on_redis
 
 logger = logging.getLogger(__name__)
 
@@ -24,14 +25,15 @@ async def get_workers_number(worker_number):
     return r
 
 
-async def get_task_number(task_number):
-    async with httpx.AsyncClient() as async_requests:
-        r = await async_requests.get(url=f"{API_BASE_URL}{API_METHODS['tasks']}{task_number}/",
-                                     headers={'Authorization': f"Token {get_token()}"})
-    logger.info(f"GET запрос {API_METHODS['tasks']}{task_number}/ - {r.status_code}")
-    return r
+# async def get_task_number(task_number):
+#     async with httpx.AsyncClient() as async_requests:
+#         r = await async_requests.get(url=f"{API_BASE_URL}{API_METHODS['tasks']}{task_number}/",
+#                                      headers={'Authorization': f"Token {get_token()}"})
+#     logger.info(f"GET запрос {API_METHODS['tasks']}{task_number}/ - {r.status_code}")
+#     return r
 
 
+# DELETE
 async def get_worker_f_chat_id(author_code):
     async with httpx.AsyncClient() as async_request:
         r = await async_request.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?chat_id={author_code}",
@@ -63,59 +65,69 @@ async def get_trades_tasks_list(trade_id):
                            f"&status=Новая - статус - {r.status_code}")
         return {'status': True, 'text': r.json()}
     else:
+        logger.error(f"'status': False, 'text': 'Вы не зарегистрированы в системе'")
         return {'status': False, 'text': "Вы не зарегистрированы в системе"}
 
 
 async def get_task_detail(number):
-    logger.info("GET запрос метод all-tasks")
-    async with httpx.AsyncClient() as async_requests:
-        r = await async_requests.get(url=f"{API_BASE_URL}all-tasks/{number}/",
-                                     headers={'Authorization': f"Token {get_token()}"})
-    if r.status_code == 200:
-        logger.info(f"Результат GET запроса метод all-tasks - {r.status_code}")
+    if get_on_redis(number) is not None:
+        return get_on_redis(number)
     else:
-        logger.warning(f"Результат GET запроса метод all-tasks - {r.status_code}")
-    return r.json()
-
-
-async def post_dont_task(number, comment_id):
-
-    t = await get_task_number(number)
-    if t.status_code == 200:
-        task = t.json()
-        task['status'] = "Отклонена"
-        task['edited'] = True
-        task['worker_comment'] = comment_id
-        logger.info(f"Создана задача {task}")
+        logger.info("GET запрос метод all-tasks")
         async with httpx.AsyncClient() as async_requests:
-            r = await async_requests.put(url=f"{API_BASE_URL}tasks/", data=task,
+            r = await async_requests.get(url=f"{API_BASE_URL}all-tasks/{number}/",
                                          headers={'Authorization': f"Token {get_token()}"})
-        logger.info(f"PUT запрос метод tasks/ - data={task}")
-        if r.status_code == 201:
-            logger.info(f"PUT запрос метод tasks/ - {r.status_code}")
-            return {'status': True, 'text': f"{r.status_code}"}
+        if r.status_code == 200:
+            save_to_redis(number, r.json())
+            logger.info(f"Результат GET запроса метод all-tasks - {r.status_code}")
+            return get_on_redis(number)
         else:
-            logger.warning(f"PUT запрос метод tasks/ - {r.status_code}")
-            return {'status': False, 'text': f"{r.status_code}"}
-    else:
-        logger.warning(f"GET запрос метод tasks/{number}/ - {t.status_code}")
+            logger.warning(f"Результат GET запроса метод all-tasks - {r.status_code}")
+
+
+# async def post_dont_task(number, comment_id):
+#
+#     t = await get_task_number(number)
+#     if t.status_code == 200:
+#         task = t.json()
+#         task['status'] = "Отклонена"
+#         task['edited'] = True
+#         task['worker_comment'] = comment_id
+#         logger.info(f"Создана задача {task}")
+#         async with httpx.AsyncClient() as async_requests:
+#             r = await async_requests.put(url=f"{API_BASE_URL}tasks/", data=task,
+#                                          headers={'Authorization': f"Token {get_token()}"})
+#         logger.info(f"PUT запрос метод tasks/ - data={task}")
+#         if r.status_code == 201:
+#             logger.info(f"PUT запрос метод tasks/ - {r.status_code}")
+#             return {'status': True, 'text': f"{r.status_code}"}
+#         else:
+#             logger.warning(f"PUT запрос метод tasks/ - {r.status_code}")
+#             return {'status': False, 'text': f"{r.status_code}"}
+#     else:
+#         logger.warning(f"GET запрос метод tasks/{number}/ - {t.status_code}")
 
 
 async def post_forward_task(number, comment_id, new_worker, author):
 
-    t = await get_task_number(number)
-    a_author = await get_worker_f_chat_id(author)
+    task_data = await get_task_detail(number)
+    if task_data is not None:
+        logger.info(f"Результат запроса в Redis - {task_data}")
+        task = {
+            'status': "Переадресована",
+            'edited': True,
+            'author_comment': int(comment_id),
+            'author': task_data['worker']['code'],
+            'worker': new_worker,
+            'worker_comment': CONSTANT_COMMENT_ID,
+            'base': task_data['base']['number'],
+            'partner': task_data['partner']['code'],
+            'number': task_data['number'],
+            'name': task_data['name'],
+            'date': task_data['date'],
+            'deadline': task_data['deadline'],
 
-    if t.status_code == 200:
-        task = t.json()
-        logger.info(f"Результат запроса метод tasks/{number}/ - {task} - {t.status_code}")
-        new_author = a_author.json()
-        task['status'] = "Переадресована"
-        task['edited'] = True
-        task['author_comment'] = int(comment_id)
-        task['worker'] = str(new_worker)
-        task['author'] = new_author[0]['code']
-        task['worker_comment'] = CONSTANT_COMMENT_ID
+        }
 
         async with httpx.AsyncClient() as async_requests:
             r = await async_requests.put(url=f"{API_BASE_URL}tasks/", data=task,
@@ -128,21 +140,21 @@ async def post_forward_task(number, comment_id, new_worker, author):
             return False
 
     else:
-        logger.info(f"GET запрос метод tasks/ - {t.status_code}")
+        logger.info(f"GET запрос метод tasks/")
         return False
 
 
-async def post_add_comment(chat_id, comment, method):
+async def post_add_comment(task, comment, method):
     """Функция для добавления нового комментария, возвращает ID созданного комментария"""
 
-    worker = await get_worker_f_chat_id(chat_id)
+    worker = get_on_redis(task)
 
-    if worker.status_code == 200:
-        logger.info(f"GET запрос worker_f/?chat_id={chat_id} - method={method} - {worker.status_code}")
+    if worker is not None:
+        logger.info(f"Получение worker из редис")
         if method == "worker":
             data = {
                 "comment": comment,
-                "worker": worker.json()[0]['code']
+                "worker": worker['worker']['code']
             }
             async with httpx.AsyncClient() as async_requests:
                 r = await async_requests.post(url=f"{API_BASE_URL}worker_comment/", data=json.dumps(data),
@@ -160,7 +172,7 @@ async def post_add_comment(chat_id, comment, method):
 
             data = {
                 "comment": comment,
-                "author": worker.json()[0]['code']
+                "author": worker['worker']['code']
             }
             async with httpx.AsyncClient() as async_requests:
                 r = await async_requests.post(url=f"{API_BASE_URL}author_comment/", data=json.dumps(data),
@@ -174,7 +186,7 @@ async def post_add_comment(chat_id, comment, method):
                 return False
 
     else:
-        logger.warning(f"GET запрос worker_f/?chat_id={chat_id} - {worker.status_code}")
+        logger.warning(f"Данные из Redis не получены")
         return False
 
 
@@ -206,18 +218,14 @@ async def put_register(phone: str, chat_id: str):
                 logger.info(f"PUT запрос workers/ - data={data} - {update.status_code}")
                 return {'status': True, 'message': "Регистрация прошла успешно"}
             else:
-                logger.warning(f"PUT запрос workers/ - data={data} - {update.status_code}")
+                logger.warning(f"PUT запрос workers/ - data={worker} - {update.status_code}")
                 return {'status': False, 'message': "Техническая ошибка. Обратитесь в тех.поддержку"}
     else:
         logger.warning(f"GET запрос worker_f/?phone={phone} - data={t.json()}- {t.status_code}")
         return {'status': False, 'message': "Техническая ошибка. Обратитесь в тех.поддержку"}
 
 
-async def get_forward_supervisor_controller(worker_number: str, author_number: str) -> dict:
-
-    trades_list = await get_workers_number(worker_number)
-    author_res = await get_workers_number(author_number)
-    author = author_res.json()
+async def get_forward_supervisor_controller(worker: str, author: str) -> dict:
 
     async with httpx.AsyncClient() as async_requests:
         controller_res = await async_requests.get(url=f"{API_BASE_URL}{API_METHODS['workers_f']}?controller=true",
@@ -225,22 +233,18 @@ async def get_forward_supervisor_controller(worker_number: str, author_number: s
 
     logger.info(f"GET запрос{API_METHODS['workers_f']}?controller=true - {controller_res.status_code}")
     controller = controller_res.json()[0]
-    supervisor_id = trades_list.json()['supervisor']
 
-    async with httpx.AsyncClient() as async_requests:
-        supervisor_res = await async_requests.get(url=f"{API_BASE_URL}{API_METHODS['supervisor_detail']}{supervisor_id}/",
-                                                  headers={'Authorization': f"Token {get_token()}"})
-
-    logger.info(f"GET запрос {API_METHODS['supervisor_detail']}{supervisor_id}/ - {supervisor_res.status_code}")
-    supervisor = supervisor_res.json()
-    worker_partner = await get_workers_number(trades_list.json()['partner'])
-    result_list = comparison(author_list=author, controller_list=controller, supervisor_list=supervisor,
-                             worker_list=trades_list.json(), partner_list=worker_partner.json())
-    logger.info(f"Создан лист переадресаций {result_list}")
-    if trades_list.status_code == 200:
-        return {'status': True, 'result': result_list}
+    if worker['partner'] is not None:
+        worker_partner = await get_workers_number(worker['partner'])
     else:
-        return {'status': False, 'result': result_list}
+        worker_partner = None
+
+    result_list = comparison(author_list=author, controller_list=controller, supervisor_list=worker['supervisor'],
+                             worker_list=worker, partner_list=worker_partner, head_list=worker['supervisor']['head'])
+
+    logger.info(f"Создан лист переадресаций {result_list}")
+
+    return {'status': True, 'result': result_list}
 
 
 async def get_partner_worker_list(partner):
@@ -259,12 +263,12 @@ async def get_result_list(group):
     return r.json()
 
 
-async def get_partner_worker(contact_person_id):
-    async with httpx.AsyncClient() as async_requests:
-        r = await async_requests.get(url=f"{API_BASE_URL}{API_METHODS['partner-worker_f']}?id={contact_person_id}",
-                                     headers={'Authorization': f"Token {get_token()}"})
-    logger.info(f"GET запрос {API_METHODS['partner-worker_f']} - с атрибутами id={contact_person_id}- {r.status_code}")
-    return r.json()
+# async def get_partner_worker(contact_person_id):
+#     async with httpx.AsyncClient() as async_requests:
+#         r = await async_requests.get(url=f"{API_BASE_URL}{API_METHODS['partner-worker_f']}?id={contact_person_id}",
+#                                      headers={'Authorization': f"Token {get_token()}"})
+#     logger.info(f"GET запрос {API_METHODS['partner-worker_f']} - с атрибутами id={contact_person_id}- {r.status_code}")
+#     return r.json()
 
 
 async def get_result_detail(result_id):
@@ -283,11 +287,28 @@ async def get_result_data_detail(result_id):
     return r.json()
 
 
-async def get_ready_result_task(result, chat_id):
+async def get_ready_result_task(result):
 
-    async_task = await get_task_number(result['task_number'])
-    task = async_task.json()
-    worker_comment_id = await post_add_comment(chat_id=chat_id, comment=result['worker_comment'], method="worker")
+    async_task = get_on_redis(result['task_number'])  # Получаем задачу из Redis
+
+    task = {
+        'number': async_task['number'],
+        'name': async_task['name'],
+        'date': async_task['date'],
+        'status': async_task['status'],
+        "deadline": async_task['deadline'],
+        "edit_date": async_task['edit_date'],
+        "edited": async_task['edited'],
+        'worker': async_task['worker']['code'],
+        'partner': async_task['partner']['code'],
+        'author': async_task['author']['code'],
+        'author_comment': async_task['author_comment']['id'],
+        'worker_comment': async_task['worker_comment']['id'],
+        'base': async_task['base']['number'],
+        'result': async_task['result']
+    }
+
+    worker_comment_id = await post_add_comment(task=result['task_number'], comment=result['worker_comment'], method="worker")
     if worker_comment_id:
         logger.info(f"Создан комментарий по id={worker_comment_id}")
         result_item = {
@@ -333,5 +354,5 @@ async def get_ready_result_task(result, chat_id):
 
 
 if __name__ == '__main__':
-    res = get_task_number("b0f2de37-19f5-11ee-81d1-000c29536c3")
+    res = get_task_detail("b0f2de37-19f5-11ee-81d1-000c29536c3")
     print(asyncio.run(res).json())

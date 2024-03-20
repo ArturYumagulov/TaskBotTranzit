@@ -107,7 +107,7 @@ def create_contact_person_done_inline_kb(width: int, dct: dict):
         for button in dct:
             buttons.append(InlineKeyboardButton(
                 text=button['name'],
-                callback_data=f"person_{button['id']}"))
+                callback_data=f"person_{button['code']}"))
 
     kb_builder.row(*buttons, width=width)
     return kb_builder.as_markup()

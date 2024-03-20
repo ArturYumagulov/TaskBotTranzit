@@ -10,9 +10,9 @@ from aiogram.types import CallbackQuery, Message
 from database.database import get_task_detail, get_forward_supervisor_controller, post_add_comment, post_forward_task
 from forms.user_form import ForwardTaskForm
 from keyboards.trades_keyboards import create_trades_forward_inline_kb
+from services.redis_data import redis_clear
 from services.utils import clear_date
-from config_data.config import DELETE_MESSAGE_TIMER
-
+from config_data.config import DELETE_MESSAGE_TIMER, CENSUS
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
     deadline = clear_date(task['deadline'])
     author_comment = task['author_comment']['comment']
 
-    if task['base']['group'] == '000000001':
+    if task['base']['group'] == CENSUS:
         author_comment = author_comment.split('_')[0]
 
     text = f"Переадресовать задачу от " \
@@ -52,7 +52,7 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
            f"<b>Комментарий автора:</b>\n" \
            f"{author_comment}"
 
-    trades_data = await get_forward_supervisor_controller(task['worker']['code'], task['author']['code'])
+    trades_data = await get_forward_supervisor_controller(task['worker'], task['author'])
     if trades_data['status']:
         await callback.message.edit_text(
             text=text,
@@ -86,7 +86,8 @@ async def process_forward_press(callback: CallbackQuery, state: FSMContext):
 
 @router.message(StateFilter(ForwardTaskForm.comment))
 async def add_forward_comment(message: Message, state: FSMContext):
-    comment_id = await post_add_comment(chat_id=message.chat.id, comment=message.text, method='author')
+    data = await state.get_data()
+    comment_id = await post_add_comment(task=data['task_number'], comment=message.text, method='author')
     await state.update_data(comment=message.text)
     await state.update_data(comment_id=comment_id)
     data = await state.get_data()
@@ -94,16 +95,20 @@ async def add_forward_comment(message: Message, state: FSMContext):
                 f"{message.from_user.id} - {message.from_user.username}")
     logger.info(f"Записаны в state данные {data} к задаче {data['task_number']} - "
                 f"{message.from_user.id} - {message.from_user.username}")
+
     task = await get_task_detail(data['task_number'])
+
     if await post_forward_task(number=data['task_number'], comment_id=data['comment_id'], new_worker=data['next_user_id'],
                                author=message.from_user.id):
         await state.clear()
+        redis_clear(data['task_number'])
         logger.info(f"Очищены в state данные к задаче {data['task_number']} - "
                     f"{message.from_user.id} - {message.from_user.username}")
         logger.info(f"Задача {data['task_number']} переадресована - "
                     f"{message.from_user.id} - {message.from_user.username}")
         await message.answer(f"Задача {task['name']} переадресована")
     else:
+        redis_clear(data['task_number'])
         await state.clear()
         logger.warning(f"Ошибка в задаче  {task['name']} - "
                        f"{message.from_user.id} - {message.from_user.username}")
@@ -111,7 +116,7 @@ async def add_forward_comment(message: Message, state: FSMContext):
 
 
 @router.message(Command(commands='reset'))
-async def send_echo(message: Message, state: FSMContext):
+async def reset(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(f"Система перезагружена")
     logger.info(f"Состояние очищено {message.from_user.id}")

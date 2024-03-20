@@ -313,6 +313,5 @@ $RECYCLE.BIN/
 *.lnk
 .idea
 logs/logfile.txt
-config_data/config.py
 .gitignore
 # End of https://www.toptal.com/developers/gitignore/api/windows,pycharm,python

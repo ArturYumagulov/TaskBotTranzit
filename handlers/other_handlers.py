@@ -50,7 +50,7 @@ async def all_tasks_command(message: Message):
                 date = clear_date(task['date'])
                 deadline = clear_date(task['deadline'])
 
-                if group_name == '000000001':  # Если "Разработка контрагента"
+                if group_name == '000000004':  # Если "Разработка контрагента"
 
                     author_comment = task['author_comment']['comment'].split('_')[0]
 
@@ -110,8 +110,8 @@ async def get_contact(message: ContentType.CONTACT):
         return await message.reply(text=response['message'], reply_markup=ReplyKeyboardRemove())
 
 
-# # Этот хэндлер будет реагировать на любые сообщения пользователя,
-# # не предусмотренные логикой работы бота
-# @router.message()
-# async def send_echo(message: Message):
-#     await message.answer(LEXICON['/help'])
+# Этот хэндлер будет реагировать на любые сообщения пользователя,
+# не предусмотренные логикой работы бота
+@router.message()
+async def send_echo(message: Message):
+    await message.answer(LEXICON['/help'])
