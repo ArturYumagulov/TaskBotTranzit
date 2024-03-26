@@ -1,6 +1,6 @@
 import logging
 
-from aiogram import Router, F
+from aiogram import Router, F, types
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, ContentType, ReplyKeyboardRemove
 
@@ -9,7 +9,7 @@ from database.database import get_trades_tasks_list, put_register
 from keyboards.trades_keyboards import create_trades_register_inline_kb, create_new_tasks_inline_kb, \
     create_new_tasks_inline_kb_census
 from lexicon.lexicon import LEXICON
-from services.utils import clear_date
+from services.utils import clear_date, del_ready_task, update_task_message_id
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,12 @@ async def process_register_command(message: Message, ):
 @router.message(Command(commands='tasks'))
 async def all_tasks_command(message: Message):
 
+    # TODO добавить функционал удаления старых задач, после вывода новых
+
     tasks_list = await get_trades_tasks_list(message.from_user.id)
+
+    # [del_ready_task(message.from_user.id, x['message_id']) for x in tasks_list['text']]  # Удаление плашек выгруженных задач
+
     logger.info(f"Поступила команда tasks - {message.from_user.id} - {message.from_user.username}")
     if tasks_list['status']:
         if len(tasks_list['text']) > 0:
@@ -66,7 +71,7 @@ async def all_tasks_command(message: Message):
                            f"<b>Основание:</b>\n" \
                            f"{task['base']['name']}\n" \
                            f"<b>Комментарий автора:</b>\n" \
-                           f"{author_comment}"
+                           f"{author_comment}" + f'{message.message_id}'
 
                     await message.answer(
                         text=text,
@@ -85,11 +90,12 @@ async def all_tasks_command(message: Message):
                            f"<b>Основание:</b>\n" \
                            f"{task['base']['name']}\n" \
                            f"<b>Комментарий автора:</b>\n" \
-                           f"{task['author_comment']['comment']}"
+                           f"{task['author_comment']['comment']}" + f'{message.message_id}'
 
                     await message.answer(
                             text=text,
                             reply_markup=create_new_tasks_inline_kb(task))
+
         else:
             await message.answer(text="У вас нет новых задач")
     else:

@@ -1,4 +1,15 @@
+import json
+import logging
 from config_data import config
+import httpx
+from environs import Env
+
+from config_data.config import API_BASE_URL
+
+logger = logging.getLogger(__name__)
+
+env = Env()
+Env.read_env()
 
 
 def clear_date(data):
@@ -76,6 +87,38 @@ def comparison(controller_list, supervisor_list, author_list, worker_list, partn
             result_list.append(head_list)
 
     return result_list
+
+
+def del_ready_task(chat_id, message_id):
+    r = httpx.get(
+        f'https://api.telegram.org/bot{env.str("BOT_TOKEN")}/deleteMessage?chat_id={chat_id}&message_id={message_id}')
+    if r.json()['ok']:
+        logger.info(f"{chat_id}- {r.json()['result']} - "
+                    f"- {message_id} удалено сообщение - 201")
+        return True
+    else:
+        logger.error(f"{chat_id} - {r.json()['description']}"
+                     f"- не удалено - 400")
+        return False
+
+
+def update_task_message_id(message_id, task_number):
+    update_task = {
+        "number": task_number,
+        "message_id": message_id,
+    }
+
+    r = httpx.put(
+        f"{API_BASE_URL}task-message-update/", data=update_task)
+
+    if r.status_code == 201:
+        logger.info(f"{task_number}- {r.json()['result']} - "
+                    f"- {message_id} обновлено - 201")
+        return True
+    else:
+        logger.error(f"{task_number} - {r.json()}"
+                     f"- {message_id} не обновлено - {r.status_code}")
+        return False
 
 
 if __name__ == '__main__':

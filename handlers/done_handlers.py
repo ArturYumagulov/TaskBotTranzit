@@ -99,9 +99,14 @@ async def process_contact_press(callback: CallbackQuery, state: FSMContext):
     text = f"""
             Выберите контактное лицо\n\n
             """
-
-    await callback.message.answer(text=text,
-                                  reply_markup=create_contact_person_done_inline_kb(1, task['partner']['workers']))
+    partner_workers = task['partner']['workers']
+    if len(partner_workers) <= 0:
+        partner_workers = [{"name": "Нет контакта а 1С", "positions": "Нет контакта а 1С", "code": None}]
+        await callback.message.answer(text=text,
+                                      reply_markup=create_contact_person_done_inline_kb(1, partner_workers))
+    else:
+        await callback.message.answer(text=text,
+                                      reply_markup=create_contact_person_done_inline_kb(1, partner_workers))
 
     await asyncio.sleep(DELETE_MESSAGE_TIMER)
     await callback.message.delete()
