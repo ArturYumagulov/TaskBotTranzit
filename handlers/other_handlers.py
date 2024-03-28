@@ -71,7 +71,7 @@ async def all_tasks_command(message: Message):
                            f"<b>Основание:</b>\n" \
                            f"{task['base']['name']}\n" \
                            f"<b>Комментарий автора:</b>\n" \
-                           f"{author_comment}" + f'{message.message_id}'
+                           f"{author_comment}"
 
                     await message.answer(
                         text=text,
@@ -90,7 +90,7 @@ async def all_tasks_command(message: Message):
                            f"<b>Основание:</b>\n" \
                            f"{task['base']['name']}\n" \
                            f"<b>Комментарий автора:</b>\n" \
-                           f"{task['author_comment']['comment']}" + f'{message.message_id}'
+                           f"{task['author_comment']['comment']}"
 
                     await message.answer(
                             text=text,
