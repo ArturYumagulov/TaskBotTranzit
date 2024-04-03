@@ -235,7 +235,8 @@ async def get_forward_supervisor_controller(worker: str, author: str) -> dict:
     controller = controller_res.json()[0]
 
     if worker['partner'] is not None:
-        worker_partner = await get_workers_number(worker['partner'])
+        worker_data = await get_workers_number(worker['partner'])
+        worker_partner = worker_data.json()
     else:
         worker_partner = None
 
