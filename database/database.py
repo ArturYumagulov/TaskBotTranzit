@@ -240,7 +240,7 @@ async def get_forward_supervisor_controller(worker: str, author: str) -> dict:
         worker_partner = None
 
     result_list = comparison(author_list=author, controller_list=controller, supervisor_list=worker['supervisor'],
-                             worker_list=worker, partner_list=worker_partner, head_list=worker['supervisor']['head'])
+                             worker_list=worker, partner_list=worker_partner.json(), head_list=worker['supervisor']['head'])
 
     logger.info(f"Создан лист переадресаций {result_list}")
 
