@@ -61,7 +61,7 @@ async def all_tasks_command(message: Message):
 
                     text = f"Задача от " \
                            f"{date}\n\n" \
-                           f"'{TASK_GROUP[group_name]}'\n\n" \
+                           f"Сенсус по адресу: '{task['name']}'\n\n" \
                            f"<b>Исполнить до:</b>\n" \
                            f"{deadline}\n" \
                            f"<b>Автор:</b>\n" \
