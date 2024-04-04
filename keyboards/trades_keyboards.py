@@ -29,8 +29,12 @@ def create_new_tasks_inline_kb(task):
     forward_button: InlineKeyboardButton = InlineKeyboardButton(
         text=TASK_KEYS['forward']['text'],
         callback_data=f"{TASK_KEYS['forward']['callback_data']}{task['number']}")
-    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
-        inline_keyboard=[[done_button], [forward_button]])  # [not_done_button][1]
+    if task['author']['code'] == 'HardCollect':  # Если задача хардовая
+        keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
+            inline_keyboard=[[done_button]])  # [not_done_button][1]
+    else:
+        keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(
+            inline_keyboard=[[done_button], [forward_button]])  # [not_done_button][1]
     return keyboard
 
 
