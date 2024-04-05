@@ -28,7 +28,7 @@ def load_config(path: str | None = None) -> Config:
 
 DELETE_MESSAGE_TIMER = 7
 
-CONSTANT_COMMENT_ID = 83
+CONSTANT_COMMENT_ID = 2
 
 SOFT_COLLECTION_USER_CODE = "SoftCollect"
 
