@@ -234,7 +234,7 @@ async def get_forward_supervisor_controller(worker: str, author: str) -> dict:
     logger.info(f"GET запрос{API_METHODS['workers_f']}?controller=true - {controller_res.status_code}")
     controller = controller_res.json()[0]
 
-    if worker['partner'] is not None:
+    if json.loads(worker['partner']) is not None:
         worker_data = await get_workers_number(worker['partner'])
         worker_partner = worker_data.json()
     else:
