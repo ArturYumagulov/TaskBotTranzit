@@ -1,12 +1,15 @@
 import asyncio
 import logging
 
-from aiogram import Router
+from aiogram import Router, Dispatcher, Bot
+from aiogram import F
 from aiogram.filters import Text, StateFilter
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.state import default_state
 from aiogram.fsm.context import FSMContext
 from aiogram3_calendar import simple_cal_callback
+
+from filters.filters import menu_commands_filter
 from keyboards.calendar import MySimpleCalendar
 
 from database.database import get_task_detail, get_partner_worker_list, get_result_list, \
@@ -18,7 +21,6 @@ from keyboards.trades_keyboards import create_types_done_inline_kb, create_resul
 
 from lexicon import lexicon
 from forms.user_form import DoneTaskForm
-from lexicon.lexicon import LEXICON_COMMANDS
 from services.utils import clear_date
 from config_data.config import DELETE_MESSAGE_TIMER
 
@@ -27,39 +29,32 @@ logger = logging.getLogger(__name__)
 router: Router = Router()
 
 
-@router.message(StateFilter(DoneTaskForm.worker_comment))
+@router.message(StateFilter(DoneTaskForm.worker_comment), menu_commands_filter)  # F.text != '/reset'
 async def add_ok_task_comment(message: Message, state: FSMContext):
     """Добавление комментария к выполненной задаче"""
 
     task = await state.get_data()
+    await state.update_data(worker_comment=message.text)
+    await message.delete()
 
-    if message.text in LEXICON_COMMANDS.keys():
-        await message.answer(text="Укажите правильный комментарий к задаче, задача не выполнена")
-        logger.warning(f"{message.from_user.id} - <u>{get_on_redis(task['task_number'])['worker']['name']}</u> - Указан неверный комментарий")
-        redis_clear(task['task_number'])
+    logger.info(f"Комментарий к задаче {task['task_number']} - {message.from_user.id} - "
+                f"{message.from_user.username}")
+    task_data = await state.get_data()
+
+    res = await get_ready_result_task(task_data)
+
+    if res['status']:
+        logger.info(f"{res['text']}- {message.from_user.id} - {message.from_user.username}")
         await state.clear()
+        redis_clear(task['task_number'])
     else:
-        await state.update_data(worker_comment=message.text)
-        await message.delete()
+        logger.warning(f"{res['text']}- {message.from_user.id} - {message.from_user.username}")
 
-        logger.info(f"Комментарий к задаче {task['task_number']} - {message.from_user.id} - "
-                    f"{message.from_user.username}")
-        task_data = await state.get_data()
-
-        res = await get_ready_result_task(task_data)
-
-        if res['status']:
-            logger.info(f"{res['text']}- {message.from_user.id} - {message.from_user.username}")
-            await state.clear()
-            redis_clear(task['task_number'])
-        else:
-            logger.warning(f"{res['text']}- {message.from_user.id} - {message.from_user.username}")
-
-        redis_clear(task['task_number'])
-        await state.clear()
-        logger.info(f"Cостояние очищено по задаче {task['task_number']} - "
-                    f"{message.from_user.id} - {message.from_user.username}")
-        await message.answer(text=res['text'])
+    redis_clear(task['task_number'])
+    await state.clear()
+    logger.info(f"Cостояние очищено по задаче {task['task_number']} - "
+                f"{message.from_user.id} - {message.from_user.username}")
+    await message.answer(text=res['text'])
 
 
 @router.callback_query(Text(startswith='ok'), StateFilter(default_state))
@@ -101,7 +96,7 @@ async def process_contact_press(callback: CallbackQuery, state: FSMContext):
             """
     partner_workers = task['partner']['workers']
     if len(partner_workers) <= 0:
-        partner_workers = [{"name": "Нет контакта а 1С", "positions": "Нет контакта а 1С", "code": None}]
+        partner_workers = [{"name": "Нет контакта в 1С", "positions": "Нет контакта в 1С", "code": None}]
         await callback.message.answer(text=text,
                                       reply_markup=create_contact_person_done_inline_kb(1, partner_workers))
     else:
