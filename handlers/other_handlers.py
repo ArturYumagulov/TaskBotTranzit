@@ -4,10 +4,10 @@ from aiogram import Router, F, types
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, ContentType, ReplyKeyboardRemove
 
-from config_data.config import TASK_GROUP
-from database.database import get_trades_tasks_list, put_register
+from config_data.config import TASK_GROUP, API_BASE_URL
+from database.database import get_trades_tasks_list, put_register, get_worker_f_chat_id
 from keyboards.trades_keyboards import create_trades_register_inline_kb, create_new_tasks_inline_kb, \
-    create_new_tasks_inline_kb_census
+    create_new_tasks_inline_kb_census, create_full_census_inline_kb
 from lexicon.lexicon import LEXICON
 from services.utils import clear_date, del_ready_task, update_task_message_id
 
@@ -118,6 +118,18 @@ async def get_contact(message: ContentType.CONTACT):
 
 # Этот хэндлер будет реагировать на любые сообщения пользователя,
 # не предусмотренные логикой работы бота
-@router.message()
-async def send_echo(message: Message):
-    await message.answer(LEXICON['/help'])
+# @router.message()
+# async def send_echo(message: Message):
+#     await message.answer(LEXICON['/help'])
+
+
+@router.message(Command(commands='census'))
+async def ful_census_command(message: Message):
+    logger.info(f"Поступила команда заполнения Сенсуса - {message.from_user.id} - {message.from_user.username}")
+    depart_res = await get_worker_f_chat_id(message.from_user.id)
+    department = depart_res.json()[0]['department']
+    census_url = f"{API_BASE_URL[:-7]}census/census-template/?depart={department}&worker={message.from_user.id}"
+    await message.answer(
+        text="Чтобы заполнить сенсус нажмите кнопку",
+        reply_markup=create_full_census_inline_kb(census_url)
+    )

@@ -117,5 +117,11 @@ def create_contact_person_done_inline_kb(width: int, dct: dict):
     return kb_builder.as_markup()
 
 
+def create_full_census_inline_kb(url: str):
+    buttons: list[InlineKeyboardButton] = [InlineKeyboardButton(text="Заполнить сенсус", url=url)]
+    keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=[buttons])
+    return keyboard
+
+
 if __name__ == '__main__':
     pass
