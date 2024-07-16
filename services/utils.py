@@ -1,5 +1,8 @@
 import json
 import logging
+
+import jwt
+
 from config_data import config
 import httpx
 from environs import Env
@@ -119,6 +122,12 @@ def update_task_message_id(message_id, task_number):
         logger.error(f"{task_number} - {r.json()}"
                      f"- {message_id} не обновлено - {r.status_code}")
         return False
+
+
+def token_generator(data):
+    code = {'code': data['code']}
+    secret, ALGORITHM = data['secret'].split('_')
+    return jwt.encode(code, secret, algorithm=ALGORITHM)
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@ from database.database import get_trades_tasks_list, put_register, get_worker_f_
 from keyboards.trades_keyboards import create_trades_register_inline_kb, create_new_tasks_inline_kb, \
     create_new_tasks_inline_kb_census, create_full_census_inline_kb
 from lexicon.lexicon import LEXICON
-from services.utils import clear_date, del_ready_task, update_task_message_id
+from services.utils import clear_date, del_ready_task, update_task_message_id, token_generator
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +128,11 @@ async def ful_census_command(message: Message):
     logger.info(f"Поступила команда заполнения Сенсуса - {message.from_user.id} - {message.from_user.username}")
     depart_res = await get_worker_f_chat_id(message.from_user.id)
     department = depart_res.json()[0]['department']
-    census_url = f"{API_BASE_URL[:-7]}census/census-template/?depart={department}&worker={message.from_user.id}"
+    token = token_generator(depart_res.json()[0])
+    census_url = f"{API_BASE_URL[:-7]}census/census-template/?" \
+                 f"depart={department}&" \
+                 f"worker={message.from_user.id}&" \
+                 f"token={token}"
     await message.answer(
         text="Чтобы заполнить сенсус нажмите кнопку",
         reply_markup=create_full_census_inline_kb(census_url)
